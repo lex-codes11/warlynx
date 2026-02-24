@@ -222,7 +222,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 20: Turn output structure completeness**
     - **Validates: Requirements 6.2, 7.3, 7.4, 7.5**
   
-  - [~] 9.5 Implement action validation
+  - [x] 9.5 Implement action validation
     - Create `lib/ai/action-validator.ts`
     - Validate actions against Power Sheet
     - Check for unreasonable power scaling
@@ -234,14 +234,14 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 22: Action validation against Power_Sheet**
     - **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5**
   
-  - [~] 9.7 Implement stat update logic
+  - [x] 9.7 Implement stat update logic
     - Create `lib/ai/stat-updater.ts`
     - Apply stat changes from turn resolution
     - Handle level-ups with perk generation
     - Handle status effects
     - _Requirements: 9.1, 9.2, 9.3_
   
-  - [~] 9.8 Create turn processing API route
+  - [x] 9.8 Create turn processing API route
     - Create `app/api/game/[gameId]/turn/route.ts`
     - Validate permissions (active player only)
     - Process action through DM
@@ -251,7 +251,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - _Requirements: 6.3, 7.6_
 
 - [ ] 10. Stats tracking and character death
-  - [~] 10.1 Implement stats tracker
+  - [x] 10.1 Implement stats tracker
     - Create `lib/stats-tracker.ts`
     - Create stat snapshots after events
     - Track character progression history
@@ -261,7 +261,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 24: Stat updates are broadcast and stored**
     - **Validates: Requirements 9.3, 9.4, 11.4**
   
-  - [~] 10.3 Implement character death handling
+  - [x] 10.3 Implement character death handling
     - Detect HP reaching zero
     - Mark character as dead
     - Remove from turn order
@@ -272,12 +272,12 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 23: Character death updates turn order**
     - **Validates: Requirements 10.1, 10.2, 10.3**
   
-  - [~] 10.5 Create stats API routes
+  - [x] 10.5 Create stats API routes
     - Create `app/api/characters/[characterId]/stats/route.ts`
     - Return current stats and history
     - _Requirements: 9.5_
 
-- [~] 11. Checkpoint - Ensure all tests pass
+- [x] 11. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 12. Security and permissions

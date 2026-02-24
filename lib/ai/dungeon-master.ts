@@ -8,10 +8,17 @@ import OpenAI from 'openai';
 import { prisma } from '../prisma';
 import { PowerSheet } from '../turn-manager';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client (lazy initialization to avoid errors in tests)
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || 'test-key',
+    });
+  }
+  return openai;
+}
 
 // Configuration for retry logic
 const MAX_RETRIES = 3;
@@ -504,7 +511,7 @@ async function attemptTurnNarrativeGeneration(
   const prompt = buildDMPrompt(context, customAction);
 
   // Call GPT-4
-  const response = await openai.chat.completions.create({
+  const response = await getOpenAIClient().chat.completions.create({
     model: 'gpt-4',
     messages: [
       {

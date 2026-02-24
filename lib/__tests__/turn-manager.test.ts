@@ -12,6 +12,8 @@ import {
   isActivePlayer,
   validateTurnOrder,
   getTurnOrderWithDetails,
+  markCharacterDead,
+  shouldGameEnd,
   type PowerSheet,
 } from '../turn-manager';
 
@@ -24,6 +26,10 @@ jest.mock('../prisma', () => ({
     },
     gamePlayer: {
       findFirst: jest.fn(),
+    },
+    character: {
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
   }
 }));
@@ -607,6 +613,183 @@ describe('Turn Manager', () => {
       (prisma.game.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(getTurnOrderWithDetails('game1')).rejects.toThrow('GAME_NOT_FOUND');
+    });
+  });
+
+  describe('markCharacterDead', () => {
+    it('should normalize negative HP to 0', async () => {
+      const mockCharacter = {
+        id: 'char1',
+        powerSheet: {
+          level: 1,
+          hp: -15,
+          maxHp: 100,
+          attributes: { strength: 50, agility: 50, intelligence: 50, charisma: 50, endurance: 50 },
+          abilities: [],
+          weakness: 'test',
+          statuses: [],
+          perks: [],
+        },
+      };
+
+      (prisma.character.findUnique as jest.Mock).mockResolvedValue(mockCharacter);
+      (prisma.character.update as jest.Mock).mockResolvedValue({
+        ...mockCharacter,
+        powerSheet: { ...mockCharacter.powerSheet, hp: 0 },
+      });
+
+      await markCharacterDead('char1');
+
+      expect(prisma.character.update).toHaveBeenCalledWith({
+        where: { id: 'char1' },
+        data: {
+          powerSheet: expect.objectContaining({
+            hp: 0,
+          }),
+        },
+      });
+    });
+
+    it('should not update if HP is already 0', async () => {
+      const mockCharacter = {
+        id: 'char1',
+        powerSheet: {
+          level: 1,
+          hp: 0,
+          maxHp: 100,
+          attributes: { strength: 50, agility: 50, intelligence: 50, charisma: 50, endurance: 50 },
+          abilities: [],
+          weakness: 'test',
+          statuses: [],
+          perks: [],
+        },
+      };
+
+      (prisma.character.findUnique as jest.Mock).mockResolvedValue(mockCharacter);
+
+      await markCharacterDead('char1');
+
+      expect(prisma.character.update).not.toHaveBeenCalled();
+    });
+
+    it('should not update if HP is positive', async () => {
+      const mockCharacter = {
+        id: 'char1',
+        powerSheet: {
+          level: 1,
+          hp: 50,
+          maxHp: 100,
+          attributes: { strength: 50, agility: 50, intelligence: 50, charisma: 50, endurance: 50 },
+          abilities: [],
+          weakness: 'test',
+          statuses: [],
+          perks: [],
+        },
+      };
+
+      (prisma.character.findUnique as jest.Mock).mockResolvedValue(mockCharacter);
+
+      await markCharacterDead('char1');
+
+      expect(prisma.character.update).not.toHaveBeenCalled();
+    });
+
+    it('should throw error for non-existent character', async () => {
+      (prisma.character.findUnique as jest.Mock).mockResolvedValue(null);
+
+      await expect(markCharacterDead('non-existent-id')).rejects.toThrow('CHARACTER_NOT_FOUND');
+    });
+  });
+
+  describe('shouldGameEnd', () => {
+    it('should return true when all players are dead', async () => {
+      const mockGame = {
+        id: 'game1',
+        players: [
+          {
+            id: 'player1',
+            userId: 'user1',
+            character: {
+              id: 'char1',
+              powerSheet: { hp: 0, maxHp: 100 },
+            },
+          },
+          {
+            id: 'player2',
+            userId: 'user2',
+            character: {
+              id: 'char2',
+              powerSheet: { hp: 0, maxHp: 100 },
+            },
+          },
+        ],
+      };
+
+      (prisma.game.findUnique as jest.Mock).mockResolvedValue(mockGame);
+
+      const result = await shouldGameEnd('game1');
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when at least one player is alive', async () => {
+      const mockGame = {
+        id: 'game1',
+        players: [
+          {
+            id: 'player1',
+            userId: 'user1',
+            character: {
+              id: 'char1',
+              powerSheet: { hp: 50, maxHp: 100 },
+            },
+          },
+          {
+            id: 'player2',
+            userId: 'user2',
+            character: {
+              id: 'char2',
+              powerSheet: { hp: 0, maxHp: 100 },
+            },
+          },
+        ],
+      };
+
+      (prisma.game.findUnique as jest.Mock).mockResolvedValue(mockGame);
+
+      const result = await shouldGameEnd('game1');
+
+      expect(result).toBe(false);
+    });
+
+    it('should return false when all players are alive', async () => {
+      const mockGame = {
+        id: 'game1',
+        players: [
+          {
+            id: 'player1',
+            userId: 'user1',
+            character: {
+              id: 'char1',
+              powerSheet: { hp: 100, maxHp: 100 },
+            },
+          },
+          {
+            id: 'player2',
+            userId: 'user2',
+            character: {
+              id: 'char2',
+              powerSheet: { hp: 75, maxHp: 100 },
+            },
+          },
+        ],
+      };
+
+      (prisma.game.findUnique as jest.Mock).mockResolvedValue(mockGame);
+
+      const result = await shouldGameEnd('game1');
+
+      expect(result).toBe(false);
     });
   });
 });

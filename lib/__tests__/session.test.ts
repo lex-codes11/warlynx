@@ -24,15 +24,15 @@ jest.mock("next/headers", () => ({
 }));
 
 // Create a mock function that we can control
-const mockGetServerSessionImplImpl = jest.fn();
+const mockGetServerSessionImpl = jest.fn();
 
 jest.mock("next-auth/next", () => ({
-  getServerSession: (...args: any[]) => mockGetServerSessionImplImpl(...args),
+  getServerSession: jest.fn((...args: any[]) => mockGetServerSessionImpl(...args)),
 }));
 
-const mockRedirectImplImpl = jest.fn();
+const mockRedirectImpl = jest.fn();
 jest.mock("next/navigation", () => ({
-  redirect: (...args: any[]) => mockRedirectImplImpl(...args),
+  redirect: jest.fn((...args: any[]) => mockRedirectImpl(...args)),
 }));
 
 jest.mock("@/lib/auth-options", () => ({
@@ -52,8 +52,8 @@ import {
 describe("Session Management", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetServerSessionImplImpl.mockReset();
-    mockRedirectImplImpl.mockReset();
+    mockGetServerSessionImpl.mockReset();
+    mockRedirectImpl.mockReset();
   });
 
   describe("getSession", () => {

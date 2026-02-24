@@ -91,6 +91,36 @@ export function isCharacterDead(powerSheet: PowerSheet): boolean {
 }
 
 /**
+ * Marks a character as dead by setting HP to 0 if it's negative
+ * This ensures consistent death state representation
+ * Validates: Requirements 10.1
+ */
+export async function markCharacterDead(characterId: string): Promise<void> {
+  const character = await prisma.character.findUnique({
+    where: { id: characterId },
+    select: { powerSheet: true },
+  });
+
+  if (!character) {
+    throw new Error('CHARACTER_NOT_FOUND');
+  }
+
+  const powerSheet = character.powerSheet as unknown as PowerSheet;
+
+  // Only update if HP is not already 0 (normalize negative HP to 0)
+  if (powerSheet.hp !== 0 && powerSheet.hp <= 0) {
+    powerSheet.hp = 0;
+    
+    await prisma.character.update({
+      where: { id: characterId },
+      data: {
+        powerSheet: powerSheet as any,
+      },
+    });
+  }
+}
+
+/**
  * Gets all alive players in turn order
  * Filters out players whose characters have HP <= 0
  * Validates: Requirements 6.5, 10.2
@@ -123,11 +153,20 @@ export async function getAlivePlayers(gameId: string) {
     if (!player.character) {
       return false;
     }
-    const powerSheet = player.character.powerSheet as PowerSheet;
+    const powerSheet = player.character.powerSheet as unknown as PowerSheet;
     return !isCharacterDead(powerSheet);
   });
 
   return alivePlayers;
+}
+
+/**
+ * Checks if the game should end due to all players being dead
+ * Validates: Requirements 10.3
+ */
+export async function shouldGameEnd(gameId: string): Promise<boolean> {
+  const alivePlayers = await getAlivePlayers(gameId);
+  return alivePlayers.length === 0;
 }
 
 /**
@@ -171,7 +210,7 @@ export async function advanceTurn(gameId: string) {
     if (!player.character) {
       return false;
     }
-    const powerSheet = player.character.powerSheet as PowerSheet;
+    const powerSheet = player.character.powerSheet as unknown as PowerSheet;
     return !isCharacterDead(powerSheet);
   });
 
@@ -280,7 +319,7 @@ export async function validateTurnOrder(gameId: string): Promise<{ valid: boolea
   }
 
   // Check if all players are in turn order
-  for (const playerId of playerIds) {
+  for (const playerId of Array.from(playerIds)) {
     if (!game.turnOrder.includes(playerId)) {
       errors.push(`Player ${playerId} is not in turn order`);
     }
@@ -339,7 +378,7 @@ export async function getTurnOrderWithDetails(gameId: string) {
     }
 
     const isAlive = player.character 
-      ? !isCharacterDead(player.character.powerSheet as PowerSheet)
+      ? !isCharacterDead(player.character.powerSheet as unknown as PowerSheet)
       : false;
 
     return {
