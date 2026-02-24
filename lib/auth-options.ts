@@ -1,24 +1,47 @@
 import { NextAuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import DiscordProvider from "next-auth/providers/discord";
-import EmailProvider from "next-auth/providers/email";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    // Email provider for passwordless authentication
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: Number(process.env.EMAIL_SERVER_PORT),
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
+    // Username/Password authentication
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
-      from: process.env.EMAIL_FROM,
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password required");
+        }
+
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
+
+        if (!user || !user.password) {
+          throw new Error("Invalid credentials");
+        }
+
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+
+        if (!isValid) {
+          throw new Error("Invalid credentials");
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          displayName: user.displayName,
+          avatar: user.avatar,
+        };
+      },
     }),
     // Google OAuth provider (optional)
     ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
@@ -45,80 +68,26 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",
-    verifyRequest: "/auth/verify-request",
   },
   callbacks: {
     async session({ session, token }) {
       if (session.user && token.sub) {
-        // Fetch complete user data from database
-        const user = await prisma.user.findUnique({
-          where: { id: token.sub },
-          select: {
-            id: true,
-            email: true,
-            displayName: true,
-            avatar: true,
-          },
-        });
-
-        if (user) {
-          session.user = {
-            ...session.user,
-            id: user.id,
-            displayName: user.displayName,
-            avatar: user.avatar,
-          };
-        }
+        session.user = {
+          ...session.user,
+          id: token.sub,
+          displayName: token.displayName as string,
+          avatar: token.avatar as string,
+        };
       }
       return session;
     },
-    async jwt({ token, user, account, profile }) {
-      // Initial sign in
+    async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
+        token.displayName = user.displayName;
+        token.avatar = user.avatar;
       }
-
-      // OAuth sign in - update user profile with OAuth data
-      if (account && profile) {
-        const displayName =
-          profile.name ||
-          (profile as any).username ||
-          (profile as any).global_name ||
-          token.email?.split("@")[0] ||
-          "User";
-
-        const avatar =
-          (profile as any).image ||
-          (profile as any).avatar_url ||
-          (profile as any).picture ||
-          null;
-
-        // Update user with OAuth profile data
-        if (token.sub) {
-          await prisma.user.update({
-            where: { id: token.sub },
-            data: {
-              displayName,
-              avatar,
-            },
-          });
-        }
-      }
-
       return token;
-    },
-  },
-  events: {
-    async createUser({ user }) {
-      // Set default displayName if not provided
-      if (!user.displayName && user.email) {
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            displayName: user.email.split("@")[0],
-          },
-        });
-      }
     },
   },
 };
