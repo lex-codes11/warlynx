@@ -20,11 +20,12 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Relations
-  hostedGames  Game[]       @relation("HostedGames")
-  gamePlayers  GamePlayer[]
-  characters   Character[]
-  accounts     Account[]
-  sessions     Session[]
+  hostedGames    Game[]         @relation("HostedGames")
+  gamePlayers    GamePlayer[]
+  characters     Character[]
+  accounts       Account[]
+  sessions       Session[]
+  typingStatuses TypingStatus[]
 
   @@index([email])
 }
@@ -66,20 +67,21 @@ model VerificationToken {
 }
 
 model Game {
-  id               String   @id @default(cuid())
-  name             String
-  hostId           String
-  inviteCode       String   @unique
-  maxPlayers       Int
-  difficultyCurve  String   // 'easy' | 'medium' | 'hard' | 'brutal'
-  toneTags         String[] // Array of tags
-  houseRules       String?  @db.Text
-  status           String   @default("lobby") // 'lobby' | 'active' | 'completed'
-  turnOrder        String[] // Array of player IDs
-  currentTurnIndex Int      @default(0)
-  createdAt        DateTime @default(now())
-  startedAt        DateTime?
-  completedAt      DateTime?
+  id                  String   @id @default(cuid())
+  name                String
+  hostId              String
+  inviteCode          String   @unique
+  maxPlayers          Int
+  difficultyCurve     String   // 'easy' | 'medium' | 'hard' | 'brutal'
+  toneTags            String[] // Array of tags
+  houseRules          String?  @db.Text
+  status              String   @default("lobby") // 'lobby' | 'active' | 'completed'
+  turnOrder           String[] // Array of player IDs
+  currentTurnIndex    Int      @default(0)
+  currentTurnPlayerId String?  // Current active player ID
+  createdAt           DateTime @default(now())
+  startedAt           DateTime?
+  completedAt         DateTime?
 
   // Relations
   host           User            @relation("HostedGames", fields: [hostId], references: [id])
@@ -88,6 +90,7 @@ model Game {
   turns          Turn[]
   events         GameEvent[]
   statsSnapshots StatsSnapshot[]
+  typingStatuses TypingStatus[]
 
   @@index([inviteCode])
   @@index([hostId])
@@ -127,6 +130,7 @@ model Character {
   powerSheet        Json     // PowerSheet object
   imageUrl          String
   imagePrompt       String   @db.Text
+  isReady           Boolean  @default(false) // Ready state for pre-game
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -213,4 +217,19 @@ model ImageGenerationLog {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model TypingStatus {
+  gameId      String
+  userId      String
+  isTyping    Boolean  @default(false)
+  lastUpdated DateTime @default(now())
+
+  // Relations
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([gameId, userId])
+  @@index([gameId])
+  @@index([userId])
 }

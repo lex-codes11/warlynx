@@ -74,6 +74,13 @@ export interface StatsUpdatedEvent {
   update: any;
 }
 
+export interface TypingStatusEvent {
+  type: 'typing:status';
+  gameId: string;
+  userId: string;
+  isTyping: boolean;
+}
+
 export type RealtimeGameEvent =
   | GameUpdatedEvent
   | PlayerJoinedEvent
@@ -81,7 +88,8 @@ export type RealtimeGameEvent =
   | TurnStartedEvent
   | TurnResolvedEvent
   | CharacterUpdatedEvent
-  | StatsUpdatedEvent;
+  | StatsUpdatedEvent
+  | TypingStatusEvent;
 
 /**
  * Subscribe to a game room for real-time updates
@@ -102,6 +110,7 @@ export function subscribeToGame(
     onTurnResolved?: (response: any) => void;
     onCharacterUpdated?: (character: any) => void;
     onStatsUpdated?: (update: any) => void;
+    onTypingStatus?: (userId: string, isTyping: boolean) => void;
   }
 ): RealtimeChannel {
   const channel = client.channel(`game:${gameId}`, {
@@ -132,6 +141,9 @@ export function subscribeToGame(
     })
     .on('broadcast', { event: 'stats:updated' }, (payload) => {
       callbacks.onStatsUpdated?.(payload.payload);
+    })
+    .on('broadcast', { event: 'typing:status' }, (payload) => {
+      callbacks.onTypingStatus?.(payload.payload.userId, payload.payload.isTyping);
     })
     .subscribe();
 

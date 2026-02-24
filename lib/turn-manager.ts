@@ -1,10 +1,11 @@
 /**
  * Turn Manager Utilities
  * Handles turn order tracking, active player designation, and turn advancement
- * Validates: Requirements 6.1, 6.5
+ * Validates: Requirements 6.1, 6.5, 10.1, 10.3
  */
 
 import { prisma } from './prisma';
+import { broadcastEvent } from './realtime/broadcast';
 
 /**
  * PowerSheet interface matching the JSON structure in Character.powerSheet
@@ -172,7 +173,8 @@ export async function shouldGameEnd(gameId: string): Promise<boolean> {
 /**
  * Advances to the next turn, skipping dead players
  * Returns the new active player
- * Validates: Requirements 6.5, 10.2
+ * Broadcasts turn change via real-time engine
+ * Validates: Requirements 6.5, 10.2, 10.3
  */
 export async function advanceTurn(gameId: string) {
   const game = await prisma.game.findUnique({
@@ -252,6 +254,20 @@ export async function advanceTurn(gameId: string) {
 
       // Return the new active player
       const activePlayer = updatedGame.players.find(p => p.userId === nextPlayerId);
+
+      // Broadcast turn change via real-time engine
+      // Validates: Requirements 10.3
+      await broadcastEvent(gameId, 'turn:changed', {
+        currentPlayerId: nextPlayerId,
+        turnIndex: nextIndex,
+        activePlayer: {
+          userId: activePlayer!.userId,
+          displayName: activePlayer!.user.displayName,
+          characterId: activePlayer!.character?.id,
+          characterName: activePlayer!.character?.name,
+        },
+      });
+
       return {
         game: updatedGame,
         activePlayer: activePlayer!,

@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { createSubscriptionManager, RealtimeSubscriptionManager } from "@/lib/realtime/subscription-manager";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
+import { TypingIndicator } from "@/components/realtime/TypingIndicator";
 
 type Character = {
   id: string;
@@ -52,9 +55,54 @@ export default function GameRoomClient({
   const [customAction, setCustomAction] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [typingPlayers, setTypingPlayers] = useState<string[]>([]);
+  const [subscriptionManager, setSubscriptionManager] = useState<RealtimeSubscriptionManager | null>(null);
+
+  // Initialize subscription manager
+  useEffect(() => {
+    const manager = createSubscriptionManager();
+    setSubscriptionManager(manager);
+
+    // Subscribe to session for real-time updates
+    manager.subscribeToSession({
+      sessionId: game.id,
+      callbacks: {
+        onPlayerTyping: (playerId: string, isTyping: boolean) => {
+          // Find player name
+          const player = game.players.find((p: any) => p.userId === playerId);
+          const playerName = player?.user?.displayName || player?.user?.email || 'Unknown Player';
+          
+          setTypingPlayers((prev) => {
+            if (isTyping) {
+              // Add player if not already in list
+              return prev.includes(playerName) ? prev : [...prev, playerName];
+            } else {
+              // Remove player from list
+              return prev.filter((name) => name !== playerName);
+            }
+          });
+        },
+      },
+    });
+
+    // Cleanup on unmount
+    return () => {
+      manager.unsubscribe();
+    };
+  }, [game.id, game.players]);
+
+  // Typing indicator hook
+  const { handleTypingStart, handleTypingStop } = useTypingIndicator({
+    subscriptionManager,
+    userId,
+    enabled: true,
+  });
 
   const handleSubmitAction = async () => {
     if (!customAction.trim()) return;
+
+    // Requirement 11.4: Clear typing indicator on input submission
+    handleTypingStop();
 
     setSubmitting(true);
     setError(null);
@@ -160,12 +208,24 @@ export default function GameRoomClient({
                 </label>
                 <textarea
                   value={customAction}
-                  onChange={(e) => setCustomAction(e.target.value)}
+                  onChange={(e) => {
+                    setCustomAction(e.target.value);
+                    // Requirement 11.1: Detect typing start and broadcast to other players
+                    handleTypingStart();
+                  }}
+                  onKeyDown={(e) => {
+                    // Requirement 11.4: Clear typing on Enter (if submitting)
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                      handleSubmitAction();
+                    }
+                  }}
                   rows={4}
                   maxLength={500}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="What do you want to do?"
                 />
+                {/* Requirement 11.3: Display typing indicator */}
+                <TypingIndicator typingPlayers={typingPlayers} className="mt-2" />
               </div>
 
               <button

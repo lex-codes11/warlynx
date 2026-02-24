@@ -56,6 +56,28 @@ Core Supabase Realtime configuration and client-side utilities.
 - `unsubscribeFromGame()` - Unsubscribes from a game room
 - `getChannelState()` - Gets the current connection state
 
+### `subscription-manager.ts`
+Advanced subscription manager with presence tracking, typing indicators, and automatic reconnection.
+
+**Key Features:**
+- Session-specific channel naming (`session:${sessionId}`)
+- Presence tracking for player join/leave events
+- Typing indicators with 2-second debounce
+- Automatic reconnection with exponential backoff
+- Connection state management
+- Multiple broadcast methods for different event types
+
+**Key Methods:**
+- `subscribeToSession()` - Subscribe to a session with callbacks
+- `trackPresence()` - Track user presence in the session
+- `broadcastAction()` - Broadcast game state updates
+- `broadcastTypingStatus()` - Broadcast typing status with debounce
+- `broadcastCharacterUpdate()` - Broadcast character changes
+- `broadcastStatsUpdate()` - Broadcast stat changes
+- `broadcastTurnChange()` - Broadcast turn changes
+- `reconnect()` - Manually trigger reconnection
+- `unsubscribe()` - Clean up and unsubscribe
+
 ### `broadcast.ts`
 Server-side utilities for broadcasting events to game rooms.
 
@@ -89,6 +111,97 @@ The system supports the following real-time events:
 ## Usage
 
 ### Client-Side (React Components)
+
+#### Using RealtimeSubscriptionManager (Recommended for Game Enhancements)
+
+```tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { createSubscriptionManager } from '@/lib/realtime/subscription-manager';
+import type { PlayerPresence } from '@/lib/realtime/subscription-manager';
+
+export function GameSession({ sessionId, userId, userName }: { 
+  sessionId: string; 
+  userId: string;
+  userName: string;
+}) {
+  const [manager] = useState(() => createSubscriptionManager());
+  const [connectionState, setConnectionState] = useState('disconnected');
+  const [typingPlayers, setTypingPlayers] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    // Subscribe to session
+    manager.subscribeToSession({
+      sessionId,
+      callbacks: {
+        onPlayerJoined: (player: PlayerPresence) => {
+          console.log('Player joined:', player);
+        },
+        onPlayerLeft: (playerId: string) => {
+          console.log('Player left:', playerId);
+        },
+        onGameStateUpdate: (state) => {
+          console.log('Game state updated:', state);
+        },
+        onPlayerTyping: (playerId, isTyping) => {
+          setTypingPlayers(prev => {
+            const next = new Set(prev);
+            if (isTyping) {
+              next.add(playerId);
+            } else {
+              next.delete(playerId);
+            }
+            return next;
+          });
+        },
+        onConnectionStateChange: (state) => {
+          setConnectionState(state);
+        },
+      },
+      autoReconnect: true,
+      reconnectDelay: 1000,
+      maxReconnectAttempts: 5,
+    });
+
+    // Track presence
+    manager.trackPresence({
+      userId,
+      userName,
+      joinedAt: new Date().toISOString(),
+    });
+
+    // Cleanup
+    return () => {
+      manager.untrackPresence();
+      manager.unsubscribe();
+    };
+  }, [sessionId, userId, userName, manager]);
+
+  const handleTyping = (isTyping: boolean) => {
+    manager.broadcastTypingStatus(userId, isTyping);
+  };
+
+  const handleAction = (action: any) => {
+    manager.broadcastAction(action);
+  };
+
+  return (
+    <div>
+      <div>Connection: {connectionState}</div>
+      {typingPlayers.size > 0 && (
+        <div>Players typing: {Array.from(typingPlayers).join(', ')}</div>
+      )}
+      {!manager.isConnected() && (
+        <button onClick={() => manager.reconnect()}>Reconnect</button>
+      )}
+      {/* Game UI */}
+    </div>
+  );
+}
+```
+
+#### Using useRealtimeGame Hook (Legacy)
 
 ```tsx
 'use client';

@@ -37,6 +37,77 @@ export interface Perk {
   unlockedAt: number; // level
 }
 
+// Game Enhancements Types
+
+export interface Character {
+  id: string;
+  gameId: string;
+  userId: string;
+  name: string;
+  fusionIngredients: string;
+  description: string; // max 1000 characters
+  abilities: string[];
+  weakness: string;
+  alignment: string | null;
+  archetype: string | null;
+  tags: string[];
+  powerSheet: PowerSheet;
+  imageUrl: string;
+  imagePrompt: string;
+  isReady: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface GameSession {
+  id: string;
+  name: string;
+  hostId: string;
+  inviteCode: string;
+  maxPlayers: number;
+  difficultyCurve: DifficultyCurve;
+  toneTags: string[];
+  houseRules: string | null;
+  status: GameStatus;
+  turnOrder: string[]; // Array of player IDs
+  currentTurnIndex: number;
+  currentTurnPlayerId: string | null; // Current active player ID
+  createdAt: Date;
+  startedAt: Date | null;
+  completedAt: Date | null;
+}
+
+export interface CharacterStats {
+  health: number;
+  maxHealth: number;
+  energy: number;
+  maxEnergy: number;
+  level: number;
+  attributes: {
+    strength: number;
+    agility: number;
+    intelligence: number;
+    charisma: number;
+    endurance: number;
+  };
+}
+
+export interface TypingStatus {
+  gameId: string;
+  userId: string;
+  isTyping: boolean;
+  lastUpdated: Date;
+}
+
+export interface Player {
+  id: string;
+  userId: string;
+  displayName: string;
+  avatar: string | null;
+  characterId: string | null;
+  isReady: boolean;
+}
+
 export interface TurnRequest {
   gameId: string;
   playerId: string;

@@ -34,8 +34,14 @@ jest.mock('../prisma', () => ({
   }
 }));
 
+// Mock broadcast module
+jest.mock('../realtime/broadcast', () => ({
+  broadcastEvent: jest.fn().mockResolvedValue(undefined),
+}));
+
 // Import after mocking
 import { prisma } from '../prisma';
+import { broadcastEvent } from '../realtime/broadcast';
 
 describe('Turn Manager', () => {
   beforeEach(() => {
@@ -412,6 +418,51 @@ describe('Turn Manager', () => {
       (prisma.game.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(advanceTurn('game1')).rejects.toThrow('GAME_NOT_FOUND');
+    });
+
+    it('should broadcast turn change event when advancing turn', async () => {
+      const mockGame = {
+        id: 'game1',
+        status: 'active',
+        turnOrder: ['user1', 'user2'],
+        currentTurnIndex: 0,
+        players: [
+          {
+            id: 'player1',
+            userId: 'user1',
+            user: { id: 'user1', displayName: 'Player 1', avatar: null },
+            character: { id: 'char1', name: 'Character 1', powerSheet: { hp: 100, maxHp: 100 } },
+          },
+          {
+            id: 'player2',
+            userId: 'user2',
+            user: { id: 'user2', displayName: 'Player 2', avatar: null },
+            character: { id: 'char2', name: 'Character 2', powerSheet: { hp: 100, maxHp: 100 } },
+          },
+        ],
+      };
+
+      const mockUpdatedGame = {
+        ...mockGame,
+        currentTurnIndex: 1,
+      };
+
+      (prisma.game.findUnique as jest.Mock).mockResolvedValue(mockGame as any);
+      (prisma.game.update as jest.Mock).mockResolvedValue(mockUpdatedGame as any);
+
+      await advanceTurn('game1');
+
+      // Verify broadcast was called with correct parameters
+      expect(broadcastEvent).toHaveBeenCalledWith('game1', 'turn:changed', {
+        currentPlayerId: 'user2',
+        turnIndex: 1,
+        activePlayer: {
+          userId: 'user2',
+          displayName: 'Player 2',
+          characterId: 'char2',
+          characterName: 'Character 2',
+        },
+      });
     });
   });
 
