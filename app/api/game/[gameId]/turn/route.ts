@@ -184,40 +184,9 @@ export async function POST(
       );
     }
 
-    // If action is custom (not A, B, C, or D), validate it first
+    // A-D choices are always allowed - no validation needed
+    // Custom actions are passed to the DM for narrative validation
     const isStandardChoice = ['A', 'B', 'C', 'D'].includes(action.toUpperCase());
-    
-    if (!isStandardChoice) {
-      const validationResult = validateAction(
-        action,
-        powerSheet,
-        activePlayer.character.name
-      );
-
-      if (!validationResult.valid) {
-        // Return validation error with refusal message
-        const refusalMessage = generateRefusalMessage(
-          validationResult,
-          activePlayer.character.name
-        );
-
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: 'INVALID_ACTION',
-              message: refusalMessage,
-              details: {
-                reason: validationResult.reason,
-                suggestedAlternatives: validationResult.suggestedAlternatives,
-              },
-              retryable: true,
-            },
-          },
-          { status: 400 }
-        );
-      }
-    }
 
     // Create turn record
     const turn = await prisma.turn.create({

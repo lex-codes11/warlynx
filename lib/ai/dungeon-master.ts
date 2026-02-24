@@ -312,16 +312,26 @@ PLAYER'S CUSTOM ACTION:
 "${sanitizedAction}"
 
 INSTRUCTIONS:
-1. First, validate if this action is within the active player's Power Sheet abilities and reasonable power scaling
-2. If INVALID:
-   - Explain why the action is not allowed
-   - Reference specific abilities or limitations from their Power Sheet
-   - Require the player to choose from the A-D options below
-3. If VALID:
-   - Resolve the action with appropriate consequences
+1. The DM should be VERY FLEXIBLE and allow creative actions
+2. Players can:
+   - Flee battles and go elsewhere (night school, training, shopping, etc.)
+   - Learn new skills through training or education
+   - Attempt creative solutions to problems
+   - Use their existing abilities in novel ways
+3. ONLY reject actions that are:
+   - Completely impossible given the game world (e.g., "I fly to Mars" when no space travel exists)
+   - Instant god-mode powers with no buildup (e.g., "I instantly become omnipotent")
+   - Using specific abilities the character has never trained for or learned
+4. If the action is VALID (most should be):
+   - Resolve it with appropriate consequences
    - Update character stats as needed
    - Generate narrative that flows from this action
    - Present 4 new choices (A, B, C, D) for what happens next
+5. If the action is INVALID (rare):
+   - Explain why briefly
+   - Require the player to choose from the A-D options below
+
+REMEMBER: Be permissive! If a character wants to go to night school to learn plane building, that's valid. If they want to flee a battle, that's valid. Creative gameplay is encouraged!
 
 `;
   } else {
@@ -361,9 +371,12 @@ CRITICAL RULES:
 - KEEP IT SHORT - Maximum 8 sentences for narrative
 - Use dynamic, action-focused language
 - ALWAYS generate exactly 4 choices labeled A, B, C, D
-- NEVER allow actions outside the active player's Power Sheet
+- BE FLEXIBLE - Allow creative actions (fleeing, training, learning new skills, etc.)
+- ONLY reject truly impossible actions (instant god powers, abilities never trained for)
+- Characters can learn new abilities through training, education, or experience
+- Characters can go anywhere (night school, different locations, flee battles)
 - NEVER provide plot armor - characters can die if HP reaches 0
-- ALWAYS consider character weaknesses in consequences
+- Weaknesses affect effectiveness, not possibility
 - ALWAYS update stats based on narrative events
 - Maintain consistency with recent events and character states
 - Keep the narrative engaging and the stakes meaningful
