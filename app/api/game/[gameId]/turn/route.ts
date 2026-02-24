@@ -188,6 +188,28 @@ export async function POST(
     // Custom actions are passed to the DM for narrative validation
     const isStandardChoice = ['A', 'B', 'C', 'D'].includes(action.toUpperCase());
 
+    // Check if a turn already exists for this turn index (prevent duplicate creation)
+    const existingTurn = await prisma.turn.findFirst({
+      where: {
+        gameId,
+        turnIndex: game.currentTurnIndex,
+      },
+    });
+
+    if (existingTurn) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: 'TURN_ALREADY_PROCESSING',
+            message: 'A turn is already being processed. Please wait.',
+            retryable: false,
+          },
+        },
+        { status: 409 }
+      );
+    }
+
     // Create turn record
     const turn = await prisma.turn.create({
       data: {

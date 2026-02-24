@@ -318,20 +318,26 @@ INSTRUCTIONS:
    - Learn new skills through training or education
    - Attempt creative solutions to problems
    - Use their existing abilities in novel ways
+   - Travel through space, portals, dimensions if they have the means (flight, portals, magic, etc.)
+   - Transform, mutate, or enhance themselves through various means
 3. ONLY reject actions that are:
-   - Completely impossible given the game world (e.g., "I fly to Mars" when no space travel exists)
-   - Instant god-mode powers with no buildup (e.g., "I instantly become omnipotent")
-   - Using specific abilities the character has never trained for or learned
-4. If the action is VALID (most should be):
+   - Instant god-mode powers with no buildup or explanation (e.g., "I become omnipotent instantly")
+   - Using highly specific abilities the character has never trained for AND has no way to learn
+4. BE OPEN-MINDED about what's possible:
+   - Space travel is possible for beings with flight, portals, or special powers
+   - Portals, dimensions, and reality-bending exist in this universe
+   - Characters can learn, grow, and gain new abilities through experience
+   - Creative uses of existing powers should be encouraged
+5. If the action is VALID (most should be):
    - Resolve it with appropriate consequences
    - Update character stats as needed
    - Generate narrative that flows from this action
    - Present 4 new choices (A, B, C, D) for what happens next
-5. If the action is INVALID (rare):
+6. If the action is INVALID (very rare):
    - Explain why briefly
    - Require the player to choose from the A-D options below
 
-REMEMBER: Be permissive! If a character wants to go to night school to learn plane building, that's valid. If they want to flee a battle, that's valid. Creative gameplay is encouraged!
+REMEMBER: Be permissive and creative! This is a fantasy universe where almost anything is possible with the right powers or circumstances.
 
 `;
   } else {
