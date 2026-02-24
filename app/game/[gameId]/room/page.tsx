@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth-options";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import GameRoomClient from "./GameRoomClient";
+import { EnhancedGameplayView } from "@/components/gameplay/EnhancedGameplayView";
 
 export default async function GameRoomPage({
   params,
@@ -34,6 +34,8 @@ export default async function GameRoomPage({
               name: true,
               imageUrl: true,
               powerSheet: true,
+              abilities: true,
+              weakness: true,
             },
           },
         },
@@ -72,7 +74,7 @@ export default async function GameRoomPage({
   const userPlayer = game.players.find((p: any) => p.userId === session.user.id);
 
   return (
-    <GameRoomClient
+    <EnhancedGameplayView
       game={game}
       userId={session.user.id}
       userCharacterId={userPlayer?.character?.id}

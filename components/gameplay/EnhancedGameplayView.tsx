@@ -24,7 +24,7 @@ interface EnhancedGameplayViewProps {
   game: any;
   userId: string;
   userCharacterId?: string;
-  onMoveSubmit: (move: string) => Promise<void>;
+  onMoveSubmit?: (move: string) => Promise<void>;
 }
 
 /**
@@ -128,7 +128,26 @@ export function EnhancedGameplayView({
 
   const handleMoveSelected = async (move: string) => {
     handleTypingStop(); // Clear typing indicator (Requirement 11.4)
-    await onMoveSubmit(move);
+    
+    try {
+      const response = await fetch(`/api/game/${game.id}/turn`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: move }),
+      });
+
+      if (response.ok) {
+        // Reload the page to get updated game state
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        console.error('Move submission failed:', data.error?.message);
+        alert(data.error?.message || 'Failed to submit move');
+      }
+    } catch (error) {
+      console.error('Move submission error:', error);
+      alert('Failed to submit move. Please try again.');
+    }
   };
 
   // Convert game data to component-friendly format
