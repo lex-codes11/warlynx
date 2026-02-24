@@ -48,6 +48,7 @@ jest.mock("@/lib/auth-options", () => ({
 
 import { POST } from "../route";
 import { getServerSession } from "next-auth";
+import { clearAllRateLimits } from "@/lib/rate-limit";
 import { prisma } from "@/lib/prisma";
 import { generatePowerSheet } from "@/lib/ai/power-sheet-generator";
 import { generateCharacterImage } from "@/lib/ai/image-generator";
@@ -148,6 +149,7 @@ describe("POST /api/characters/create", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    clearAllRateLimits(); // Clear rate limits between tests
     mockGetServerSession.mockResolvedValue(mockSession as any);
   });
 

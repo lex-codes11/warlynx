@@ -1,5 +1,11 @@
 import OpenAI from "openai";
 import { randomBytes } from "crypto";
+import {
+  sanitizeCharacterName,
+  sanitizeDescription,
+  sanitizeFusionIngredients,
+  sanitizeAbility,
+} from "../sanitize";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -135,33 +141,42 @@ async function attemptImageGeneration(
 
 /**
  * Build the DALL-E prompt using consistent template
+ * Sanitizes all user inputs before including in prompt
  * 
  * **Validates: Requirement 12.1** - Consistent prompt template based on Fusion_Ingredients and description
  */
 function buildImagePrompt(character: CharacterImageInput): string {
+  // Sanitize all user inputs to prevent prompt injection
+  const sanitizedName = sanitizeCharacterName(character.name).sanitized;
+  const sanitizedFusion = sanitizeFusionIngredients(character.fusionIngredients).sanitized;
+  const sanitizedDescription = sanitizeDescription(character.description).sanitized;
+  const sanitizedArchetype = character.archetype ? sanitizeAbility(character.archetype).sanitized : null;
+  const sanitizedAlignment = character.alignment ? sanitizeAbility(character.alignment).sanitized : null;
+  const sanitizedTags = character.tags?.map(t => sanitizeAbility(t).sanitized) || [];
+
   const parts: string[] = [];
 
   // Core prompt structure
   parts.push(
-    `A detailed character portrait of ${character.name}, a fusion of ${character.fusionIngredients}.`
+    `A detailed character portrait of ${sanitizedName}, a fusion of ${sanitizedFusion}.`
   );
 
   // Add description
-  parts.push(character.description);
+  parts.push(sanitizedDescription);
 
   // Add archetype if provided
-  if (character.archetype) {
-    parts.push(`Character archetype: ${character.archetype}.`);
+  if (sanitizedArchetype) {
+    parts.push(`Character archetype: ${sanitizedArchetype}.`);
   }
 
   // Add alignment if provided
-  if (character.alignment) {
-    parts.push(`Alignment: ${character.alignment}.`);
+  if (sanitizedAlignment) {
+    parts.push(`Alignment: ${sanitizedAlignment}.`);
   }
 
   // Add tags for style guidance
-  if (character.tags && character.tags.length > 0) {
-    parts.push(`Style influences: ${character.tags.join(", ")}.`);
+  if (sanitizedTags.length > 0) {
+    parts.push(`Style influences: ${sanitizedTags.join(", ")}.`);
   }
 
   // Add consistent style instructions

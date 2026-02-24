@@ -34,10 +34,11 @@ jest.mock("@/lib/auth-options", () => ({
   authOptions: {},
 }));
 
-import { POST, rateLimitStore } from "../route";
+import { POST } from "../route";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/lib/prisma";
 import { generateCharacterImage } from "@/lib/ai/image-generator";
+import { clearAllRateLimits } from "@/lib/rate-limit";
 
 const mockGetServerSession = getServerSession as jest.MockedFunction<
   typeof getServerSession
@@ -81,7 +82,7 @@ describe("POST /api/characters/[characterId]/regenerate-image", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Clear rate limit store between tests
-    rateLimitStore.clear();
+    clearAllRateLimits();
   });
 
   describe("Authentication", () => {
@@ -201,9 +202,10 @@ describe("POST /api/characters/[characterId]/regenerate-image", () => {
 
       expect(response.status).toBe(429);
       expect(data.success).toBe(false);
-      expect(data.error).toBe("Rate limit exceeded");
-      expect(data.retryable).toBe(true);
-      expect(data.resetAt).toBeDefined();
+      expect(data.error.code).toBe("RATE_LIMIT_EXCEEDED");
+      expect(data.error.message).toContain("Rate limit exceeded");
+      expect(data.error.retryable).toBe(true);
+      expect(data.error.resetAt).toBeDefined();
       expect(response.headers.get("Retry-After")).toBeDefined();
     });
 

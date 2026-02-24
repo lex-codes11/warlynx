@@ -281,7 +281,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 12. Security and permissions
-  - [~] 12.1 Implement permission validation utilities
+  - [x] 12.1 Implement permission validation utilities
     - Create `lib/permissions.ts`
     - Validate host-only actions
     - Validate active-player-only actions
@@ -292,7 +292,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 28: Permission validation for state modifications**
     - **Validates: Requirements 13.3**
   
-  - [~] 12.3 Implement input sanitization
+  - [x] 12.3 Implement input sanitization
     - Create `lib/sanitize.ts`
     - Sanitize user inputs before AI prompts
     - Prevent prompt injection
@@ -302,7 +302,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 30: Input sanitization prevents injection**
     - **Validates: Requirements 13.6**
   
-  - [~] 12.5 Implement rate limiting for AI endpoints
+  - [x] 12.5 Implement rate limiting for AI endpoints
     - Add rate limiting middleware
     - Track requests per user
     - Return rate limit errors

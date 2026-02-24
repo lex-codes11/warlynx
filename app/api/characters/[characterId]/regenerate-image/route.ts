@@ -3,75 +3,18 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { generateCharacterImage } from "@/lib/ai/image-generator";
-
-/**
- * Rate limiting configuration
- * Default: 3 regenerations per hour per user
- */
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-const RATE_LIMIT_MAX_REQUESTS = parseInt(
-  process.env.RATE_LIMIT_IMAGE_GENERATION || "3",
-  10
-);
-
-/**
- * In-memory rate limiting store
- * Structure: Map<userId, { count: number, resetAt: number }>
- * 
- * Note: For production with multiple instances, use Redis instead
- * Exported for testing purposes
- */
-export const rateLimitStore = new Map<
-  string,
-  { count: number; resetAt: number }
->();
-
-/**
- * Check if user has exceeded rate limit
- * **Validates: Requirements 4.7, 12.5**
- */
-function checkRateLimit(userId: string): {
-  allowed: boolean;
-  remaining: number;
-  resetAt: number;
-} {
-  const now = Date.now();
-  const userLimit = rateLimitStore.get(userId);
-
-  // No previous requests or window expired
-  if (!userLimit || now >= userLimit.resetAt) {
-    const resetAt = now + RATE_LIMIT_WINDOW_MS;
-    rateLimitStore.set(userId, { count: 1, resetAt });
-    return {
-      allowed: true,
-      remaining: RATE_LIMIT_MAX_REQUESTS - 1,
-      resetAt,
-    };
-  }
-
-  // Within rate limit window
-  if (userLimit.count < RATE_LIMIT_MAX_REQUESTS) {
-    userLimit.count++;
-    return {
-      allowed: true,
-      remaining: RATE_LIMIT_MAX_REQUESTS - userLimit.count,
-      resetAt: userLimit.resetAt,
-    };
-  }
-
-  // Rate limit exceeded
-  return {
-    allowed: false,
-    remaining: 0,
-    resetAt: userLimit.resetAt,
-  };
-}
+import {
+  checkRateLimit,
+  RATE_LIMITS,
+  formatRateLimitError,
+  getRateLimitHeaders,
+} from "@/lib/rate-limit";
 
 /**
  * POST /api/characters/[characterId]/regenerate-image
  * Regenerates the character image with rate limiting
  * 
- * **Validates: Requirements 4.7, 12.4, 12.5**
+ * **Validates: Requirements 4.7, 12.5, 13.4**
  */
 export async function POST(
   request: NextRequest,
@@ -99,27 +42,15 @@ export async function POST(
     }
 
     // Check rate limit
-    const rateLimit = checkRateLimit(userId);
+    const rateLimitKey = `image-regeneration:${userId}`;
+    const rateLimit = checkRateLimit(rateLimitKey, RATE_LIMITS.IMAGE_GENERATION);
+    
     if (!rateLimit.allowed) {
-      const resetInSeconds = Math.ceil(
-        (rateLimit.resetAt - Date.now()) / 1000
-      );
       return NextResponse.json(
-        {
-          success: false,
-          error: "Rate limit exceeded",
-          details: `You have reached the maximum number of image regenerations. Please try again in ${resetInSeconds} seconds.`,
-          retryable: true,
-          resetAt: new Date(rateLimit.resetAt).toISOString(),
-        },
+        formatRateLimitError(rateLimit, 'image regeneration'),
         {
           status: 429,
-          headers: {
-            "X-RateLimit-Limit": RATE_LIMIT_MAX_REQUESTS.toString(),
-            "X-RateLimit-Remaining": "0",
-            "X-RateLimit-Reset": rateLimit.resetAt.toString(),
-            "Retry-After": resetInSeconds.toString(),
-          },
+          headers: getRateLimitHeaders(rateLimit),
         }
       );
     }
@@ -217,11 +148,7 @@ export async function POST(
         },
       },
       {
-        headers: {
-          "X-RateLimit-Limit": RATE_LIMIT_MAX_REQUESTS.toString(),
-          "X-RateLimit-Remaining": rateLimit.remaining.toString(),
-          "X-RateLimit-Reset": rateLimit.resetAt.toString(),
-        },
+        headers: getRateLimitHeaders(rateLimit),
       }
     );
   } catch (error) {

@@ -1,5 +1,11 @@
 import OpenAI from "openai";
 import { PowerSheet, Ability } from "../types";
+import {
+  sanitizeCharacterName,
+  sanitizeDescription,
+  sanitizeFusionIngredients,
+  sanitizeAbility,
+} from "../sanitize";
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -102,19 +108,30 @@ async function attemptPowerSheetGeneration(
 
 /**
  * Build the GPT-4 prompt for Power Sheet generation
+ * Sanitizes all user inputs before including in prompt
  */
 function buildPowerSheetPrompt(character: CharacterInput): string {
+  // Sanitize all user inputs to prevent prompt injection
+  const sanitizedName = sanitizeCharacterName(character.name).sanitized;
+  const sanitizedFusion = sanitizeFusionIngredients(character.fusionIngredients).sanitized;
+  const sanitizedDescription = sanitizeDescription(character.description).sanitized;
+  const sanitizedAbilities = character.abilities.map(a => sanitizeAbility(a).sanitized);
+  const sanitizedWeakness = sanitizeAbility(character.weakness).sanitized;
+  const sanitizedAlignment = character.alignment ? sanitizeAbility(character.alignment).sanitized : null;
+  const sanitizedArchetype = character.archetype ? sanitizeAbility(character.archetype).sanitized : null;
+  const sanitizedTags = character.tags?.map(t => sanitizeAbility(t).sanitized) || [];
+
   return `You are a game master creating a balanced character for a multiplayer narrative game.
 
 Character Information:
-- Name: ${character.name}
-- Fusion Ingredients: ${character.fusionIngredients}
-- Description: ${character.description}
-- Abilities: ${character.abilities.join(", ")}
-- Weakness: ${character.weakness}
-${character.alignment ? `- Alignment: ${character.alignment}` : ""}
-${character.archetype ? `- Archetype: ${character.archetype}` : ""}
-${character.tags && character.tags.length > 0 ? `- Tags: ${character.tags.join(", ")}` : ""}
+- Name: ${sanitizedName}
+- Fusion Ingredients: ${sanitizedFusion}
+- Description: ${sanitizedDescription}
+- Abilities: ${sanitizedAbilities.join(", ")}
+- Weakness: ${sanitizedWeakness}
+${sanitizedAlignment ? `- Alignment: ${sanitizedAlignment}` : ""}
+${sanitizedArchetype ? `- Archetype: ${sanitizedArchetype}` : ""}
+${sanitizedTags.length > 0 ? `- Tags: ${sanitizedTags.join(", ")}` : ""}
 
 Generate a normalized Power Sheet with:
 1. Starting level (always 1)

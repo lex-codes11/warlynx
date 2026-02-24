@@ -7,6 +7,7 @@
 import OpenAI from 'openai';
 import { prisma } from '../prisma';
 import { PowerSheet } from '../turn-manager';
+import { sanitizeAction } from '../sanitize';
 
 // Initialize OpenAI client (lazy initialization to avoid errors in tests)
 let openai: OpenAI | null = null;
@@ -228,6 +229,7 @@ export async function fetchDMContext(gameId: string): Promise<DMPromptContext> {
 
 /**
  * Builds the DM prompt for narrative generation
+ * Sanitizes custom actions to prevent prompt injection
  * Validates: Requirements 7.1, 7.2
  */
 export function buildDMPrompt(context: DMPromptContext, customAction?: string): string {
@@ -238,6 +240,9 @@ export function buildDMPrompt(context: DMPromptContext, customAction?: string): 
     recentEvents,
     currentTurn,
   } = context;
+
+  // Sanitize custom action if provided
+  const sanitizedAction = customAction ? sanitizeAction(customAction).sanitized : undefined;
 
   // Format Power Sheet for readability
   const formatPowerSheet = (ps: PowerSheet) => {
@@ -301,10 +306,10 @@ ${recentEventsText}
 
 `;
 
-  if (customAction) {
+  if (sanitizedAction) {
     prompt += `
 PLAYER'S CUSTOM ACTION:
-"${customAction}"
+"${sanitizedAction}"
 
 INSTRUCTIONS:
 1. First, validate if this action is within the active player's Power Sheet abilities and reasonable power scaling

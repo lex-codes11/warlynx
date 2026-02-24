@@ -14,6 +14,7 @@ import { generateTurnNarrative } from '@/lib/ai/dungeon-master';
 import { processStatUpdates } from '@/lib/ai/stat-updater';
 import { validateAction } from '@/lib/ai/action-validator';
 import * as broadcast from '@/lib/realtime/broadcast';
+import { clearAllRateLimits } from '@/lib/rate-limit';
 
 // Mock dependencies
 jest.mock('next-auth');
@@ -150,6 +151,7 @@ describe('POST /api/game/[gameId]/turn', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    clearAllRateLimits(); // Clear rate limits between tests
 
     // Default mocks
     mockGetServerSession.mockResolvedValue(mockSession as any);

@@ -9,7 +9,7 @@
  * - Broadcasts updates
  * - Stores turn and events
  * 
- * Validates: Requirements 6.3, 7.6
+ * Validates: Requirements 6.3, 7.6, 13.4
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -25,6 +25,12 @@ import {
   broadcastCharacterUpdate,
   broadcastGameUpdate,
 } from '@/lib/realtime/broadcast';
+import {
+  checkRateLimit,
+  RATE_LIMITS,
+  formatRateLimitError,
+  getRateLimitHeaders,
+} from '@/lib/rate-limit';
 import { prisma } from '@/lib/prisma';
 import { PowerSheet, Perk } from '@/lib/types';
 
@@ -56,6 +62,20 @@ export async function POST(
 
     const { gameId } = params;
     const userId = session.user.id;
+
+    // **Validates: Requirement 13.4** - Check rate limit for turn processing
+    const rateLimitKey = `turn-processing:${userId}`;
+    const rateLimit = checkRateLimit(rateLimitKey, RATE_LIMITS.TURN_PROCESSING);
+    
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        formatRateLimitError(rateLimit, 'turn processing'),
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimit),
+        }
+      );
+    }
 
     // Parse request body
     const body = (await request.json()) as TurnRequestBody;
@@ -435,7 +455,10 @@ export async function POST(
           },
         },
       },
-      { status: 200 }
+      { 
+        status: 200,
+        headers: getRateLimitHeaders(rateLimit),
+      }
     );
   } catch (error) {
     console.error('Turn processing error:', error);

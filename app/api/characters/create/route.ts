@@ -4,6 +4,12 @@ import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 import { generatePowerSheet } from "@/lib/ai/power-sheet-generator";
 import { generateCharacterImage } from "@/lib/ai/image-generator";
+import {
+  checkRateLimit,
+  RATE_LIMITS,
+  formatRateLimitError,
+  getRateLimitHeaders,
+} from "@/lib/rate-limit";
 
 /**
  * Character creation request body
@@ -111,7 +117,7 @@ function validateCharacterRequest(
  * POST /api/characters/create
  * Creates a new character for a player in a game
  * 
- * **Validates: Requirements 4.1, 4.2, 4.3, 4.8**
+ * **Validates: Requirements 4.1, 4.2, 4.3, 4.8, 13.4**
  */
 export async function POST(request: NextRequest) {
   try {
@@ -125,6 +131,20 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = session.user.id;
+
+    // **Validates: Requirement 13.4** - Check rate limit for character creation
+    const rateLimitKey = `character-creation:${userId}`;
+    const rateLimit = checkRateLimit(rateLimitKey, RATE_LIMITS.CHARACTER_CREATION);
+    
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        formatRateLimitError(rateLimit, 'character creation'),
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimit),
+        }
+      );
+    }
 
     // Parse request body
     const body = await request.json();
@@ -288,6 +308,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       character,
+    }, {
+      headers: getRateLimitHeaders(rateLimit),
     });
   } catch (error) {
     console.error("Character creation error:", error);
