@@ -517,7 +517,7 @@ async function attemptTurnNarrativeGeneration(
 
   // Call GPT-4
   const response = await getOpenAIClient().chat.completions.create({
-    model: 'gpt-4',
+    model: 'gpt-4o-mini',
     messages: [
       {
         role: 'system',
