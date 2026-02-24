@@ -1,0 +1,214 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  displayName String
+  avatar      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  hostedGames  Game[]       @relation("HostedGames")
+  gamePlayers  GamePlayer[]
+  characters   Character[]
+  accounts     Account[]
+  sessions     Session[]
+
+  @@index([email])
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Game {
+  id               String   @id @default(cuid())
+  name             String
+  hostId           String
+  inviteCode       String   @unique
+  maxPlayers       Int
+  difficultyCurve  String   // 'easy' | 'medium' | 'hard' | 'brutal'
+  toneTags         String[] // Array of tags
+  houseRules       String?  @db.Text
+  status           String   @default("lobby") // 'lobby' | 'active' | 'completed'
+  turnOrder        String[] // Array of player IDs
+  currentTurnIndex Int      @default(0)
+  createdAt        DateTime @default(now())
+  startedAt        DateTime?
+  completedAt      DateTime?
+
+  // Relations
+  host           User            @relation("HostedGames", fields: [hostId], references: [id])
+  players        GamePlayer[]
+  characters     Character[]
+  turns          Turn[]
+  events         GameEvent[]
+  statsSnapshots StatsSnapshot[]
+
+  @@index([inviteCode])
+  @@index([hostId])
+  @@index([status])
+}
+
+model GamePlayer {
+  id          String   @id @default(cuid())
+  gameId      String
+  userId      String
+  role        String   // 'host' | 'player'
+  joinedAt    DateTime @default(now())
+  characterId String?  @unique
+
+  // Relations
+  game      Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  character Character? @relation(fields: [characterId], references: [id])
+
+  @@unique([gameId, userId])
+  @@index([gameId])
+  @@index([userId])
+}
+
+model Character {
+  id                String   @id @default(cuid())
+  gameId            String
+  userId            String
+  name              String
+  fusionIngredients String
+  description       String   @db.Text
+  abilities         String[] // Array of ability names
+  weakness          String
+  alignment         String?
+  archetype         String?
+  tags              String[]
+  powerSheet        Json     // PowerSheet object
+  imageUrl          String
+  imagePrompt       String   @db.Text
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  game           Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gamePlayer     GamePlayer?
+  statsSnapshots StatsSnapshot[]
+  events         GameEvent[]
+
+  @@unique([gameId, userId])
+  @@index([gameId])
+  @@index([userId])
+}
+
+model Turn {
+  id             String    @id @default(cuid())
+  gameId         String
+  turnIndex      Int
+  activePlayerId String
+  phase          String    @default("waiting") // 'waiting' | 'choosing' | 'resolving' | 'completed'
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+
+  // Relations
+  game   Game        @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  events GameEvent[]
+
+  @@unique([gameId, turnIndex])
+  @@index([gameId])
+  @@index([activePlayerId])
+}
+
+model GameEvent {
+  id          String   @id @default(cuid())
+  gameId      String
+  turnId      String?
+  characterId String?
+  type        String   // 'narrative' | 'action' | 'stat_change' | 'death' | 'level_up'
+  content     String   @db.Text
+  metadata    Json     // Additional structured data
+  createdAt   DateTime @default(now())
+
+  // Relations
+  game      Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  turn      Turn?      @relation(fields: [turnId], references: [id])
+  character Character? @relation(fields: [characterId], references: [id])
+
+  @@index([gameId])
+  @@index([turnId])
+  @@index([characterId])
+  @@index([createdAt])
+}
+
+model StatsSnapshot {
+  id          String   @id @default(cuid())
+  gameId      String
+  characterId String
+  turnId      String
+  level       Int
+  hp          Int
+  maxHp       Int
+  attributes  Json     // Attributes object
+  statuses    Json     // Array of Status objects
+  perks       Json     // Array of Perk objects
+  createdAt   DateTime @default(now())
+
+  // Relations
+  game      Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+  @@index([characterId])
+  @@index([createdAt])
+}
+
+model ImageGenerationLog {
+  id          String   @id @default(cuid())
+  userId      String
+  characterId String?
+  prompt      String   @db.Text
+  imageUrl    String
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
