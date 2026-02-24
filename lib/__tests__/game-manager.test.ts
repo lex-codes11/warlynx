@@ -28,6 +28,7 @@ jest.mock('../prisma', () => ({
     },
     gamePlayer: {
       create: jest.fn(),
+      delete: jest.fn(),
     },
     $transaction: jest.fn(),
   }
@@ -998,5 +999,178 @@ describe('startGame', () => {
 
     expect(result.startedAt).toBeDefined();
     expect(result.startedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe('leaveGame', () => {
+  const { leaveGame } = require('../game-manager');
+  
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should successfully remove a player from a game', async () => {
+    const mockGame = {
+      id: 'game-123',
+      status: 'lobby',
+      players: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          role: 'host',
+          user: { id: 'user-1', displayName: 'Host', avatar: null }
+        },
+        {
+          id: 'player-2',
+          userId: 'user-2',
+          role: 'player',
+          user: { id: 'user-2', displayName: 'Player', avatar: null }
+        }
+      ],
+      host: { id: 'user-1', displayName: 'Host', avatar: null }
+    };
+
+    const mockUpdatedGame = {
+      id: 'game-123',
+      status: 'lobby',
+      players: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          role: 'host',
+          user: { id: 'user-1', displayName: 'Host', avatar: null }
+        }
+      ],
+      host: { id: 'user-1', displayName: 'Host', avatar: null }
+    };
+
+    (prisma.game.findUnique as jest.Mock)
+      .mockResolvedValueOnce(mockGame)
+      .mockResolvedValueOnce(mockUpdatedGame);
+    (prisma.gamePlayer.delete as jest.Mock).mockResolvedValue({ id: 'player-2' });
+
+    const result = await leaveGame({
+      gameId: 'game-123',
+      userId: 'user-2'
+    });
+
+    expect(result.game.id).toBe('game-123');
+    expect(result.game.players).toHaveLength(1);
+    expect(result.removedPlayerId).toBe('user-2');
+    expect(prisma.gamePlayer.delete).toHaveBeenCalledWith({
+      where: { id: 'player-2' }
+    });
+  });
+
+  it('should throw GAME_NOT_FOUND if game does not exist', async () => {
+    (prisma.game.findUnique as jest.Mock).mockResolvedValue(null);
+
+    await expect(leaveGame({
+      gameId: 'invalid-game',
+      userId: 'user-1'
+    })).rejects.toThrow('GAME_NOT_FOUND');
+  });
+
+  it('should throw PLAYER_NOT_IN_GAME if player is not in the game', async () => {
+    const mockGame = {
+      id: 'game-123',
+      status: 'lobby',
+      players: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          role: 'host',
+          user: { id: 'user-1', displayName: 'Host', avatar: null }
+        }
+      ],
+      host: { id: 'user-1', displayName: 'Host', avatar: null }
+    };
+
+    (prisma.game.findUnique as jest.Mock).mockResolvedValue(mockGame);
+
+    await expect(leaveGame({
+      gameId: 'game-123',
+      userId: 'user-999'
+    })).rejects.toThrow('PLAYER_NOT_IN_GAME');
+  });
+
+  it('should throw CANNOT_LEAVE_ACTIVE_GAME if game has already started', async () => {
+    const mockGame = {
+      id: 'game-123',
+      status: 'active',
+      players: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          role: 'host',
+          user: { id: 'user-1', displayName: 'Host', avatar: null }
+        },
+        {
+          id: 'player-2',
+          userId: 'user-2',
+          role: 'player',
+          user: { id: 'user-2', displayName: 'Player', avatar: null }
+        }
+      ],
+      host: { id: 'user-1', displayName: 'Host', avatar: null }
+    };
+
+    (prisma.game.findUnique as jest.Mock).mockResolvedValue(mockGame);
+
+    await expect(leaveGame({
+      gameId: 'game-123',
+      userId: 'user-2'
+    })).rejects.toThrow('CANNOT_LEAVE_ACTIVE_GAME');
+  });
+
+  it('should allow host to leave the game', async () => {
+    const mockGame = {
+      id: 'game-123',
+      status: 'lobby',
+      players: [
+        {
+          id: 'player-1',
+          userId: 'user-1',
+          role: 'host',
+          user: { id: 'user-1', displayName: 'Host', avatar: null }
+        },
+        {
+          id: 'player-2',
+          userId: 'user-2',
+          role: 'player',
+          user: { id: 'user-2', displayName: 'Player', avatar: null }
+        }
+      ],
+      host: { id: 'user-1', displayName: 'Host', avatar: null }
+    };
+
+    const mockUpdatedGame = {
+      id: 'game-123',
+      status: 'lobby',
+      players: [
+        {
+          id: 'player-2',
+          userId: 'user-2',
+          role: 'player',
+          user: { id: 'user-2', displayName: 'Player', avatar: null }
+        }
+      ],
+      host: { id: 'user-1', displayName: 'Host', avatar: null }
+    };
+
+    (prisma.game.findUnique as jest.Mock)
+      .mockResolvedValueOnce(mockGame)
+      .mockResolvedValueOnce(mockUpdatedGame);
+    (prisma.gamePlayer.delete as jest.Mock).mockResolvedValue({ id: 'player-1' });
+
+    const result = await leaveGame({
+      gameId: 'game-123',
+      userId: 'user-1'
+    });
+
+    expect(result.removedPlayerId).toBe('user-1');
+    expect(prisma.gamePlayer.delete).toHaveBeenCalledWith({
+      where: { id: 'player-1' }
+    });
   });
 });

@@ -7,10 +7,12 @@
 import { POST } from '../route';
 import { getServerSession } from 'next-auth';
 import * as gameManager from '@/lib/game-manager';
+import * as broadcast from '@/lib/realtime/broadcast';
 
 // Mock dependencies
 jest.mock('next-auth');
 jest.mock('@/lib/game-manager');
+jest.mock('@/lib/realtime/broadcast');
 jest.mock('@/lib/auth-options', () => ({
   authOptions: {}
 }));
@@ -145,6 +147,8 @@ describe('POST /api/games/[gameId]/join', () => {
 
     (getServerSession as jest.Mock).mockResolvedValue(mockSession);
     (gameManager.joinGame as jest.Mock).mockResolvedValue(mockJoinResult);
+    (broadcast.broadcastPlayerJoined as jest.Mock).mockResolvedValue(undefined);
+    (broadcast.broadcastGameUpdate as jest.Mock).mockResolvedValue(undefined);
 
     const request = new Request('http://localhost:3000/api/games/game-123/join', {
       method: 'POST',
@@ -160,6 +164,21 @@ describe('POST /api/games/[gameId]/join', () => {
     expect(data.data.player.role).toBe('player');
     expect(data.data.alreadyJoined).toBe(false);
     expect(data.data.game.currentPlayerCount).toBe(2);
+    
+    // Verify broadcasts were called
+    expect(broadcast.broadcastPlayerJoined).toHaveBeenCalledWith('game-123', {
+      id: 'player-456',
+      userId: 'user-456',
+      displayName: 'Player User',
+      avatar: null,
+      role: 'player',
+      joinedAt: mockJoinResult.player.joinedAt,
+    });
+    expect(broadcast.broadcastGameUpdate).toHaveBeenCalledWith('game-123', {
+      id: 'game-123',
+      status: 'lobby',
+      currentPlayerCount: 2,
+    });
   });
 
   it('should return 200 if user already joined the game', async () => {
@@ -225,6 +244,10 @@ describe('POST /api/games/[gameId]/join', () => {
     expect(data.success).toBe(true);
     expect(data.data.alreadyJoined).toBe(true);
     expect(data.data.game.currentPlayerCount).toBe(2);
+    
+    // Verify broadcasts were NOT called for already joined
+    expect(broadcast.broadcastPlayerJoined).not.toHaveBeenCalled();
+    expect(broadcast.broadcastGameUpdate).not.toHaveBeenCalled();
   });
 
   it('should handle generic errors', async () => {

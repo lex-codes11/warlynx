@@ -7,10 +7,12 @@
 import { POST } from '../route';
 import { getServerSession } from 'next-auth';
 import { startGame } from '@/lib/game-manager';
+import * as broadcast from '@/lib/realtime/broadcast';
 
 // Mock dependencies
 jest.mock('next-auth');
 jest.mock('@/lib/game-manager');
+jest.mock('@/lib/realtime/broadcast');
 jest.mock('@/lib/auth-options', () => ({
   authOptions: {}
 }));
@@ -80,6 +82,7 @@ describe('POST /api/games/[gameId]/start', () => {
       
       mockGetServerSession.mockResolvedValue(mockSession);
       mockStartGame.mockResolvedValue(mockGameData as any);
+      (broadcast.broadcastGameUpdate as jest.Mock).mockResolvedValue(undefined);
       
       const request = new Request('http://localhost:3000/api/games/game-123/start', {
         method: 'POST'
@@ -99,6 +102,15 @@ describe('POST /api/games/[gameId]/start', () => {
       expect(mockStartGame).toHaveBeenCalledWith({
         gameId: mockGameId,
         hostId: mockHostId
+      });
+      
+      // Verify broadcast was called
+      expect(broadcast.broadcastGameUpdate).toHaveBeenCalledWith(mockGameId, {
+        id: mockGameId,
+        status: 'active',
+        turnOrder: ['user-1', 'user-2', 'user-3'],
+        currentTurnIndex: 0,
+        startedAt: mockGameData.startedAt,
       });
     });
   });

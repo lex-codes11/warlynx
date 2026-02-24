@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { joinGame, type JoinGameParams } from '@/lib/game-manager';
+import { broadcastPlayerJoined, broadcastGameUpdate } from '@/lib/realtime/broadcast';
 
 export async function POST(
   request: NextRequest,
@@ -42,6 +43,25 @@ export async function POST(
     
     // Join the game
     const { game, player, alreadyJoined } = await joinGame(joinParams);
+    
+    // Broadcast player joined event to all players in the game (only if new join)
+    if (!alreadyJoined) {
+      await broadcastPlayerJoined(gameId, {
+        id: player.id,
+        userId: player.user.id,
+        displayName: player.user.displayName,
+        avatar: player.user.avatar,
+        role: player.role,
+        joinedAt: player.joinedAt,
+      });
+      
+      // Broadcast updated game state with new player count
+      await broadcastGameUpdate(gameId, {
+        id: game.id,
+        status: game.status,
+        currentPlayerCount: game.players.length + 1,
+      });
+    }
     
     // Return success response
     return NextResponse.json(

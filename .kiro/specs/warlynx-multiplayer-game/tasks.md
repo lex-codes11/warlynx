@@ -150,7 +150,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - Implement connection state management
     - _Requirements: 11.5_
   
-  - [~] 6.2 Implement game state broadcasting
+  - [x] 6.2 Implement game state broadcasting
     - Create broadcast utilities for game state changes
     - Implement room subscription/unsubscription
     - Handle player join/leave events
@@ -160,18 +160,18 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 25: Real-time state synchronization**
     - **Validates: Requirements 11.1, 11.2, 11.3**
   
-  - [~] 6.4 Create React hooks for game state
+  - [x] 6.4 Create React hooks for game state
     - Build `hooks/useGameState.ts` for subscribing to game updates
     - Build `hooks/useTurnState.ts` for turn updates
     - Build `hooks/useCharacterStats.ts` for stat updates
     - Handle reconnection logic
     - _Requirements: 11.1, 11.2, 11.4_
 
-- [~] 7. Checkpoint - Ensure all tests pass
+- [x] 7. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 8. Turn management system
-  - [~] 8.1 Implement turn manager
+  - [x] 8.1 Implement turn manager
     - Create `lib/turn-manager.ts`
     - Implement turn order tracking
     - Implement active player designation
@@ -184,7 +184,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 17: Turn resolution advances to next player**
     - **Validates: Requirements 6.1, 6.3, 6.5**
   
-  - [~] 8.3 Implement turn permission enforcement
+  - [x] 8.3 Implement turn permission enforcement
     - Create permission validation for action submissions
     - Reject out-of-turn actions
     - _Requirements: 6.4, 13.2_
@@ -193,7 +193,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 16: Only active player can submit actions**
     - **Validates: Requirements 6.4, 13.2**
   
-  - [~] 8.5 Create Turn model API routes
+  - [x] 8.5 Create Turn model API routes
     - Create `app/api/game/[gameId]/current-turn/route.ts`
     - Return current turn state and active player
     - _Requirements: 6.6_

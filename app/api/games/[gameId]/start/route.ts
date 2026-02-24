@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { startGame, type StartGameParams } from '@/lib/game-manager';
+import { broadcastGameUpdate } from '@/lib/realtime/broadcast';
 
 export async function POST(
   _request: NextRequest,
@@ -42,6 +43,15 @@ export async function POST(
     
     // Start the game
     const game = await startGame(startParams);
+    
+    // Broadcast game started event to all players
+    await broadcastGameUpdate(gameId, {
+      id: game.id,
+      status: game.status,
+      turnOrder: game.turnOrder,
+      currentTurnIndex: game.currentTurnIndex,
+      startedAt: game.startedAt,
+    });
     
     // Return success response
     return NextResponse.json(

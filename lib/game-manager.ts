@@ -392,3 +392,95 @@ export async function startGame(params: StartGameParams) {
   
   return updatedGame;
 }
+
+/**
+ * Leave game parameters
+ */
+export interface LeaveGameParams {
+  gameId: string;
+  userId: string;
+}
+
+/**
+ * Removes a player from a game session
+ * Only allowed in lobby status (before game starts)
+ * Validates: Requirements 11.3
+ */
+export async function leaveGame(params: LeaveGameParams) {
+  const { gameId, userId } = params;
+  
+  // Fetch the game with current players
+  const game = await prisma.game.findUnique({
+    where: { id: gameId },
+    include: {
+      players: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+              avatar: true,
+            }
+          }
+        }
+      },
+      host: {
+        select: {
+          id: true,
+          displayName: true,
+          avatar: true,
+        }
+      }
+    }
+  });
+  
+  if (!game) {
+    throw new Error('GAME_NOT_FOUND');
+  }
+  
+  // Validate: player must be in the game
+  const player = game.players.find(p => p.userId === userId);
+  if (!player) {
+    throw new Error('PLAYER_NOT_IN_GAME');
+  }
+  
+  // Validate: can only leave games in lobby status
+  if (game.status !== 'lobby') {
+    throw new Error('CANNOT_LEAVE_ACTIVE_GAME');
+  }
+  
+  // Remove player from the game
+  await prisma.gamePlayer.delete({
+    where: { id: player.id }
+  });
+  
+  // Fetch updated game state
+  const updatedGame = await prisma.game.findUnique({
+    where: { id: gameId },
+    include: {
+      players: {
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+              avatar: true,
+            }
+          }
+        }
+      },
+      host: {
+        select: {
+          id: true,
+          displayName: true,
+          avatar: true,
+        }
+      }
+    }
+  });
+  
+  return {
+    game: updatedGame!,
+    removedPlayerId: userId
+  };
+}
