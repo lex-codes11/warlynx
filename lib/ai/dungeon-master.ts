@@ -333,14 +333,18 @@ Generate the next turn of the game:
   }
 
   prompt += `
-1. Write engaging narrative (2-4 paragraphs) that:
+1. Write SHORT, PUNCHY narrative (3-8 sentences MAX):
+   - Use short, impactful sentences
+   - Focus on immediate action and consequences
+   - Show, don't tell - use vivid imagery
    - Continues naturally from recent events
    - Presents a situation for the active player (${activePlayer.character.name})
    - Matches the tone tags (${gameSettings.toneTags.join(', ')})
    - Respects the ${gameSettings.difficultyCurve} difficulty curve
-   - Considers the character's current state and abilities
+   - Use emojis sparingly for emphasis (🔥, ⚡, 💀, ✨, etc.)
 
 2. Present EXACTLY 4 choices (A, B, C, D):
+   - Keep choice descriptions SHORT (5-10 words max)
    - Each choice should be meaningful and distinct
    - Choices should align with the active player's abilities
    - Include risk levels: low, medium, high, or extreme
@@ -354,6 +358,8 @@ Generate the next turn of the game:
    - New perks if leveling up
 
 CRITICAL RULES:
+- KEEP IT SHORT - Maximum 8 sentences for narrative
+- Use dynamic, action-focused language
 - ALWAYS generate exactly 4 choices labeled A, B, C, D
 - NEVER allow actions outside the active player's Power Sheet
 - NEVER provide plot armor - characters can die if HP reaches 0
@@ -522,7 +528,7 @@ async function attemptTurnNarrativeGeneration(
       {
         role: 'system',
         content:
-          'You are a Dungeon Master for a multiplayer narrative game. You must respond with valid JSON only. Always generate exactly 4 choices labeled A, B, C, D.',
+          'You are a Dungeon Master for a fast-paced multiplayer narrative game. Write SHORT, PUNCHY narratives (3-8 sentences MAX). Use dynamic action language. Respond with valid JSON only. Always generate exactly 4 choices labeled A, B, C, D with brief descriptions.',
       },
       {
         role: 'user',
