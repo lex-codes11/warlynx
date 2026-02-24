@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { StatsDisplay } from './StatsDisplay';
 import { AbilitySummaryContainer } from './AbilitySummaryContainer';
 import { TurnIndicator } from './TurnIndicator';
@@ -17,6 +18,7 @@ import { TypingIndicator } from '@/components/realtime/TypingIndicator';
 import { useTTSNarration } from '@/hooks/useTTSNarration';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { createSubscriptionManager } from '@/lib/realtime/subscription-manager';
+import { createRealtimeClient, subscribeToGame } from '@/lib/realtime/supabase';
 import { MoveOptions } from '@/types/game-enhancements';
 import { Player } from '@/lib/types';
 
@@ -32,11 +34,13 @@ interface EnhancedGameplayViewProps {
  * Integrates all game enhancement features (Requirement 19.1)
  */
 export function EnhancedGameplayView({
-  game,
+  game: initialGame,
   userId,
   userCharacterId,
   onMoveSubmit,
 }: EnhancedGameplayViewProps) {
+  const router = useRouter();
+  const [game, setGame] = useState(initialGame);
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [aiMoves, setAiMoves] = useState<MoveOptions>({
     A: 'Assess the situation carefully',
@@ -45,6 +49,7 @@ export function EnhancedGameplayView({
     D: 'Act boldly and decisively',
   });
   const [isLoadingMoves, setIsLoadingMoves] = useState(false);
+  const [isSubmittingMove, setIsSubmittingMove] = useState(false);
   const [typingPlayers, setTypingPlayers] = useState<string[]>([]);
   const [subscriptionManager] = useState(() => createSubscriptionManager());
 
@@ -69,6 +74,13 @@ export function EnhancedGameplayView({
 
   // Subscribe to real-time updates
   useEffect(() => {
+    const supabaseClient = createRealtimeClient();
+    if (!supabaseClient) {
+      console.warn('Supabase client not available for real-time updates');
+      return;
+    }
+
+    // Subscribe to typing indicators
     subscriptionManager.subscribeToSession({
       sessionId: game.id,
       callbacks: {
@@ -87,10 +99,28 @@ export function EnhancedGameplayView({
       },
     });
 
+    // Subscribe to game events (turn resolved, stats updated, etc.)
+    const gameChannel = subscribeToGame(supabaseClient, game.id, {
+      onTurnResolved: async (response: any) => {
+        // Use Next.js router to refresh server data without full page reload
+        router.refresh();
+        setIsSubmittingMove(false);
+      },
+      onStatsUpdated: (update: any) => {
+        // Stats will be updated via router.refresh()
+        router.refresh();
+      },
+      onCharacterUpdated: (character: any) => {
+        // Character will be updated via router.refresh()
+        router.refresh();
+      },
+    });
+
     return () => {
       subscriptionManager.unsubscribe();
+      gameChannel.unsubscribe();
     };
-  }, [game.id, subscriptionManager]);
+  }, [game.id, userId]);
 
   // Load AI-generated moves when it's the player's turn
   useEffect(() => {
@@ -128,6 +158,7 @@ export function EnhancedGameplayView({
 
   const handleMoveSelected = async (move: string) => {
     handleTypingStop(); // Clear typing indicator (Requirement 11.4)
+    setIsSubmittingMove(true);
     
     try {
       const response = await fetch(`/api/game/${game.id}/turn`, {
@@ -136,17 +167,17 @@ export function EnhancedGameplayView({
         body: JSON.stringify({ action: move }),
       });
 
-      if (response.ok) {
-        // Reload the page to get updated game state
-        window.location.reload();
-      } else {
+      if (!response.ok) {
         const data = await response.json();
         console.error('Move submission failed:', data.error?.message);
         alert(data.error?.message || 'Failed to submit move');
+        setIsSubmittingMove(false);
       }
+      // Don't reload - real-time subscription will update the UI
     } catch (error) {
       console.error('Move submission error:', error);
       alert('Failed to submit move. Please try again.');
+      setIsSubmittingMove(false);
     }
   };
 
@@ -222,7 +253,7 @@ export function EnhancedGameplayView({
               aiMoves={aiMoves}
               onMoveSelected={handleMoveSelected}
               isPlayerTurn={isPlayerTurn}
-              isLoading={isLoadingMoves}
+              isLoading={isLoadingMoves || isSubmittingMove}
             />
 
             {/* Typing Indicator (Requirement 11.3) */}
