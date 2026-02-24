@@ -55,8 +55,8 @@ export interface CreateGameParams {
   name: string;
   hostId: string;
   maxPlayers: number;
-  difficultyCurve: 'easy' | 'medium' | 'hard' | 'brutal';
-  toneTags: string[];
+  difficultyCurve?: 'easy' | 'medium' | 'hard' | 'brutal';
+  toneTags?: string[];
   houseRules?: string | null;
 }
 
@@ -65,7 +65,14 @@ export interface CreateGameParams {
  * Validates: Requirements 2.1, 2.2, 2.3
  */
 export async function createGame(params: CreateGameParams) {
-  const { name, hostId, maxPlayers, difficultyCurve, toneTags, houseRules } = params;
+  const { 
+    name, 
+    hostId, 
+    maxPlayers, 
+    difficultyCurve = 'medium', 
+    toneTags = [], 
+    houseRules 
+  } = params;
   
   // Generate unique invite code
   const inviteCode = await generateUniqueInviteCode();
@@ -151,12 +158,8 @@ export function validateGameParams(params: CreateGameParams): { valid: boolean; 
     errors.push('Max players must be between 2 and 10');
   }
   
-  if (!['easy', 'medium', 'hard', 'brutal'].includes(params.difficultyCurve)) {
+  if (params.difficultyCurve && !['easy', 'medium', 'hard', 'brutal'].includes(params.difficultyCurve)) {
     errors.push('Invalid difficulty curve');
-  }
-  
-  if (!params.toneTags || params.toneTags.length === 0) {
-    errors.push('At least one tone tag is required');
   }
   
   if (params.houseRules && params.houseRules.length > 500) {

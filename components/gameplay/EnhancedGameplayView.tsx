@@ -49,7 +49,7 @@ export function EnhancedGameplayView({
   const [subscriptionManager] = useState(() => createSubscriptionManager());
 
   // Get story content for TTS
-  const storyContent = game.events
+  const storyContent = (game.events || [])
     .filter((e: any) => e.type === 'narrative')
     .map((e: any) => e.content)
     .join('\n\n');
@@ -73,7 +73,7 @@ export function EnhancedGameplayView({
       sessionId: game.id,
       callbacks: {
         onPlayerTyping: (playerId: string, isTyping: boolean) => {
-          const player = game.players.find((p: any) => p.userId === playerId);
+          const player = (game.players || []).find((p: any) => p.userId === playerId);
           const playerName = player?.user?.displayName || 'Unknown Player';
 
           setTypingPlayers((prev) => {
@@ -132,16 +132,16 @@ export function EnhancedGameplayView({
   };
 
   // Convert game data to component-friendly format
-  const players: Player[] = game.players.map((p: any) => ({
+  const players: Player[] = (game.players || []).map((p: any) => ({
     id: p.id,
     userId: p.userId,
-    displayName: p.user.displayName || p.user.email,
-    avatar: p.user.avatar || null,
+    displayName: p.user?.displayName || p.user?.email || 'Unknown',
+    avatar: p.user?.avatar || null,
     characterId: p.character?.id || null,
     isReady: true,
   }));
 
-  const characters = game.players
+  const characters = (game.players || [])
     .filter((p: any) => p.character)
     .map((p: any) => p.character);
 
@@ -166,7 +166,7 @@ export function EnhancedGameplayView({
                 Story
               </h2>
               <div className="space-y-4 max-h-96 overflow-y-auto">
-                {game.events.length === 0 ? (
+                {!game.events || game.events.length === 0 ? (
                   <p className="text-gray-600 italic">
                     The adventure is about to begin...
                   </p>
