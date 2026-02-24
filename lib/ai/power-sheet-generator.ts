@@ -231,9 +231,10 @@ function validateAndNormalizePowerSheet(
     throw new Error("Missing or invalid abilities array");
   }
 
-  if (data.abilities.length !== character.abilities.length) {
+  // Allow AI to generate appropriate number of abilities (3-5 is reasonable)
+  if (data.abilities.length < 3 || data.abilities.length > 5) {
     throw new Error(
-      `Ability count mismatch: expected ${character.abilities.length}, got ${data.abilities.length}`
+      `Invalid ability count: expected 3-5, got ${data.abilities.length}`
     );
   }
 
