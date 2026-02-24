@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import animation performance optimizations */
+@import '../styles/animations.css';
+
 /* Animation delay utilities for typing indicator */
 @layer utilities {
   .animation-delay-0 {

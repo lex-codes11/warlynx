@@ -31,6 +31,9 @@ const envSchema = z.object({
   // Application
   NEXT_PUBLIC_APP_URL: z.string().url(),
 
+  // Feature Flags
+  NEXT_PUBLIC_ENABLE_CINEMATIC_UI: z.string().optional().default("false"),
+
   // OAuth Providers (optional)
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),

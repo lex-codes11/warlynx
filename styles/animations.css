@@ -1,0 +1,70 @@
+/**
+ * Animation performance optimizations
+ * Use will-change sparingly - only for frequently animated elements
+ * Remove will-change after animation completes to avoid memory issues
+ */
+
+/* Apply will-change to active PowerCard only when animating */
+.power-card-active {
+  will-change: transform, opacity;
+}
+
+/* Apply will-change to HP bar during drain animation */
+.hp-bar-animating {
+  will-change: width;
+}
+
+/* Apply will-change to particles during motion */
+.particle-animating {
+  will-change: transform, opacity;
+}
+
+/* Remove will-change when not animating to free up resources */
+.power-card-inactive,
+.hp-bar-static,
+.particle-static {
+  will-change: auto;
+}
+
+/* GPU-accelerated animations - use transform and opacity only */
+@keyframes gpu-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gpu-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.95;
+  }
+}
+
+@keyframes gpu-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Ensure all animations use GPU-accelerated properties */
+.cinematic-animation {
+  /* Force GPU acceleration */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

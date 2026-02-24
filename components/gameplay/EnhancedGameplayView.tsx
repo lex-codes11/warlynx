@@ -22,6 +22,14 @@ import { createRealtimeClient, subscribeToGame } from '@/lib/realtime/supabase';
 import { MoveOptions } from '@/types/game-enhancements';
 import { Player } from '@/lib/types';
 
+// Cinematic UI components
+import { BattleFeed } from '@/components/cinematic/BattleFeed';
+import { PowerCard } from '@/components/cinematic/PowerCard';
+import { DecisionTerminal } from '@/components/cinematic/DecisionTerminal';
+import { PowerHUD } from '@/components/cinematic/PowerHUD';
+import { AmbientBackground } from '@/components/cinematic/AmbientBackground';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+
 interface EnhancedGameplayViewProps {
   game: any;
   userId: string;
@@ -52,6 +60,9 @@ export function EnhancedGameplayView({
   const [isSubmittingMove, setIsSubmittingMove] = useState(false);
   const [typingPlayers, setTypingPlayers] = useState<string[]>([]);
   const [subscriptionManager] = useState(() => createSubscriptionManager());
+
+  // Feature flag for cinematic UI (Requirement 9.1, 10.6)
+  const useCinematicUI = process.env.NEXT_PUBLIC_ENABLE_CINEMATIC_UI === 'true';
 
   // Get story content for TTS
   const storyContent = (game.events || [])
@@ -198,6 +209,141 @@ export function EnhancedGameplayView({
   const currentPlayerId = game.turnOrder?.[game.currentTurnIndex] || '';
   const isPlayerTurn = currentPlayerId === userId;
 
+  // Get active player's character for PowerHUD
+  const activePlayer = players.find((p) => p.userId === currentPlayerId);
+  const activeCharacter = characters.find((c: any) => c.id === activePlayer?.characterId);
+
+  // Render cinematic UI if feature flag is enabled
+  if (useCinematicUI) {
+    return (
+      <div className="min-h-screen bg-[#0B0B12] relative">
+        {/* Ambient Background (Requirement 1.2) */}
+        <AmbientBackground intensity="medium" />
+
+        <div className="max-w-7xl mx-auto py-6 px-4 relative z-10">
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Left Column: Story and Actions */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* TTS Controls */}
+              <TTSControls
+                enabled={ttsEnabled}
+                onEnabledChange={setTtsEnabled}
+              />
+
+              {/* Battle Feed (Requirement 10.1) */}
+              <ErrorBoundary
+                fallback={
+                  <div className="bg-gray-900/40 backdrop-blur-md border border-red-500/30 rounded-xl p-6">
+                    <p className="text-red-400 text-center">
+                      Unable to load battle feed. Please refresh the page.
+                    </p>
+                  </div>
+                }
+              >
+                <BattleFeed events={game.events || []} />
+              </ErrorBoundary>
+
+              {/* Decision Terminal (Requirement 10.3) */}
+              <ErrorBoundary
+                fallback={
+                  <div className="bg-gray-900/40 backdrop-blur-md border border-red-500/30 rounded-xl p-6">
+                    <p className="text-red-400 text-center">
+                      Unable to load decision terminal. Please refresh the page.
+                    </p>
+                  </div>
+                }
+              >
+                <DecisionTerminal
+                  characterName={activeCharacter?.name || 'Unknown'}
+                  isPlayerTurn={isPlayerTurn}
+                  aiMoves={aiMoves}
+                  onMoveSelected={handleMoveSelected}
+                  isLoading={isLoadingMoves || isSubmittingMove}
+                />
+              </ErrorBoundary>
+
+              {/* Typing Indicator */}
+              <TypingIndicator typingPlayers={typingPlayers} />
+            </div>
+
+            {/* Right Column: Game State */}
+            <div className="space-y-6">
+              {/* Turn Indicator (Requirement 10.5) */}
+              <ErrorBoundary
+                fallback={
+                  <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
+                    <p className="text-red-400 text-center text-sm">
+                      Unable to load turn indicator
+                    </p>
+                  </div>
+                }
+              >
+                <TurnIndicator
+                  currentPlayerId={currentPlayerId}
+                  players={players}
+                />
+              </ErrorBoundary>
+
+              {/* Power Cards (Requirement 10.2) */}
+              <div className="space-y-4">
+                {characters.map((char: any) => {
+                  const charPlayer = players.find((p) => p.characterId === char.id);
+                  const isActive = charPlayer?.userId === currentPlayerId;
+                  
+                  return (
+                    <ErrorBoundary
+                      key={char.id}
+                      fallback={
+                        <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
+                          <p className="text-red-400 text-center text-sm">
+                            Unable to load character card
+                          </p>
+                        </div>
+                      }
+                    >
+                      <PowerCard
+                        character={char}
+                        isActive={isActive}
+                      />
+                    </ErrorBoundary>
+                  );
+                })}
+              </div>
+
+              {/* Stats Display */}
+              <StatsDisplay characters={characters} />
+
+              {/* Ability Summary */}
+              <AbilitySummaryContainer 
+                gameId={game.id}
+                initialCharacters={characters}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Power HUD (Requirement 10.4) */}
+        {activeCharacter && (
+          <ErrorBoundary
+            fallback={
+              <div className="fixed bottom-0 left-0 right-0 z-40 bg-gray-900/80 backdrop-blur-xl border-t border-red-500/30 p-4">
+                <p className="text-red-400 text-center text-sm">
+                  Unable to load power HUD
+                </p>
+              </div>
+            }
+          >
+            <PowerHUD
+              character={activeCharacter}
+              visible={true}
+            />
+          </ErrorBoundary>
+        )}
+      </div>
+    );
+  }
+
+  // Default UI (original)
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto py-6 px-4">
