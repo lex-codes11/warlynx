@@ -3,7 +3,7 @@ import { authOptions } from "@/lib/auth-options";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { CharacterBuilder } from "@/components/character/CharacterBuilder";
+import { CharacterCreateClient } from "./CharacterCreateClient";
 
 export default async function CreateCharacterPage({
   params,
@@ -48,12 +48,7 @@ export default async function CreateCharacterPage({
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4">
-        <CharacterBuilder
-          gameId={game.id}
-          onCharacterCreated={() => {
-            window.location.href = `/game/${game.id}/lobby`;
-          }}
-        />
+        <CharacterCreateClient gameId={game.id} />
       </div>
     </div>
   );
