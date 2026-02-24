@@ -81,6 +81,21 @@ export interface TypingStatusEvent {
   isTyping: boolean;
 }
 
+export interface ImageUpdatedEvent {
+  type: 'image:updated';
+  gameId: string;
+  characterId: string;
+  characterName: string;
+  imageUrl: string;
+}
+
+export interface TurnChangedEvent {
+  type: 'turn:changed';
+  gameId: string;
+  currentPlayerId: string;
+  turnIndex: number;
+}
+
 export type RealtimeGameEvent =
   | GameUpdatedEvent
   | PlayerJoinedEvent
@@ -89,7 +104,9 @@ export type RealtimeGameEvent =
   | TurnResolvedEvent
   | CharacterUpdatedEvent
   | StatsUpdatedEvent
-  | TypingStatusEvent;
+  | TypingStatusEvent
+  | ImageUpdatedEvent
+  | TurnChangedEvent;
 
 /**
  * Subscribe to a game room for real-time updates

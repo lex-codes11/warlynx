@@ -7,10 +7,17 @@ import {
   sanitizeAbility,
 } from "../sanitize";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialize OpenAI client
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || 'test-key',
+    });
+  }
+  return openai;
+}
 
 // Configuration for retry logic
 const MAX_RETRIES = 3;
@@ -76,8 +83,9 @@ async function attemptPowerSheetGeneration(
   character: CharacterInput
 ): Promise<PowerSheet> {
   const prompt = buildPowerSheetPrompt(character);
+  const client = getOpenAIClient();
 
-  const response = await openai.chat.completions.create({
+  const response = await client.chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
       {

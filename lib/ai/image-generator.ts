@@ -7,10 +7,17 @@ import {
   sanitizeAbility,
 } from "../sanitize";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialize OpenAI client
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY || 'test-key',
+    });
+  }
+  return openai;
+}
 
 // Configuration for retry logic
 const MAX_RETRIES = 3;
@@ -110,9 +117,10 @@ async function attemptImageGeneration(
 ): Promise<ImageGenerationResult> {
   // Build the image prompt using consistent template
   const imagePrompt = buildImagePrompt(character);
+  const client = getOpenAIClient();
 
   // Generate image with DALL-E 3
-  const response = await openai.images.generate({
+  const response = await client.images.generate({
     model: "dall-e-3",
     prompt: imagePrompt,
     n: 1,
