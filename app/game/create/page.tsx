@@ -10,7 +10,7 @@ export default function CreateGamePage() {
   const [formData, setFormData] = useState({
     name: "",
     maxPlayers: 4,
-    difficulty: "medium" as "easy" | "medium" | "hard",
+    difficultyCurve: "medium" as "easy" | "medium" | "hard" | "brutal",
     toneTags: [] as string[],
     houseRules: "",
   });
@@ -118,18 +118,18 @@ export default function CreateGamePage() {
 
           <div className="mb-4">
             <label
-              htmlFor="difficulty"
+              htmlFor="difficultyCurve"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
               Difficulty
             </label>
             <select
-              id="difficulty"
-              value={formData.difficulty}
+              id="difficultyCurve"
+              value={formData.difficultyCurve}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  difficulty: e.target.value as "easy" | "medium" | "hard",
+                  difficultyCurve: e.target.value as "easy" | "medium" | "hard" | "brutal",
                 })
               }
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -137,6 +137,7 @@ export default function CreateGamePage() {
               <option value="easy">Easy</option>
               <option value="medium">Medium</option>
               <option value="hard">Hard</option>
+              <option value="brutal">Brutal</option>
             </select>
           </div>
 
