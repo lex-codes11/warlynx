@@ -12,12 +12,22 @@ warlynx-multiplayer-game/
 │   ├── layout.tsx                # Root layout component
 │   └── page.tsx                  # Home page
 │
-├── components/                   # React components (to be implemented)
+├── components/                   # React components
+│   ├── realtime/                # Real-time components
+│   │   └── ConnectionStatus.tsx # Connection status indicator
 │   └── .gitkeep
+│
+├── hooks/                        # React hooks
+│   └── useRealtimeGame.ts       # Real-time game subscription hook
 │
 ├── lib/                          # Utility functions and shared logic
 │   ├── __tests__/               # Unit tests
 │   │   └── env.test.ts          # Environment validation tests
+│   ├── realtime/                # Real-time communication infrastructure
+│   │   ├── __tests__/           # Real-time tests
+│   │   ├── supabase.ts          # Supabase Realtime configuration
+│   │   ├── broadcast.ts         # Server-side broadcast utilities
+│   │   └── README.md            # Real-time documentation
 │   ├── env.ts                   # Environment variable validation
 │   ├── prisma.ts                # Prisma client singleton
 │   └── types.ts                 # TypeScript type definitions
@@ -60,6 +70,12 @@ warlynx-multiplayer-game/
 - **lib/env.ts**: Environment variable validation using Zod
 - **lib/prisma.ts**: Prisma client singleton for database access
 - **lib/types.ts**: Shared TypeScript type definitions
+- **lib/realtime/supabase.ts**: Supabase Realtime client configuration
+- **lib/realtime/broadcast.ts**: Server-side broadcast utilities for real-time events
+
+### Hooks
+
+- **hooks/useRealtimeGame.ts**: React hook for subscribing to real-time game updates
 
 ### Database
 
@@ -141,11 +157,11 @@ Optional:
 ## Next Steps
 
 With the infrastructure in place, the next tasks are:
-1. Implement authentication system (NextAuth)
-2. Create game management APIs
-3. Build character creation system
-4. Implement AI Dungeon Master
-5. Add real-time communication
-6. Build UI components
+1. Implement authentication system (NextAuth) ✅
+2. Create game management APIs ✅
+3. Build character creation system ✅
+4. Implement AI Dungeon Master (in progress)
+5. Add real-time communication ✅
+6. Build UI components (in progress)
 
-See `tasks.md` for the complete implementation plan.
+See `.kiro/specs/warlynx-multiplayer-game/tasks.md` for the complete implementation plan.

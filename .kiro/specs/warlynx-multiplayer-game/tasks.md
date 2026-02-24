@@ -135,7 +135,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 11: Image regeneration rate limiting**
     - **Validates: Requirements 4.7, 12.5**
   
-  - [~] 5.9 Create character builder UI
+  - [x] 5.9 Create character builder UI
     - Build CharacterBuilder component with form
     - Add validation and error display
     - Show image preview and regenerate button
@@ -143,7 +143,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - _Requirements: 4.2, 4.3, 4.8_
 
 - [ ] 6. Real-time communication system
-  - [~] 6.1 Set up real-time infrastructure
+  - [x] 6.1 Set up real-time infrastructure
     - Choose and configure Socket.io or Supabase Realtime
     - Create `lib/socket/server.ts` or `lib/realtime/supabase.ts`
     - Set up client connection in `lib/socket/client.ts`
