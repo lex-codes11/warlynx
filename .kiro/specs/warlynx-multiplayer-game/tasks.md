@@ -199,7 +199,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - _Requirements: 6.6_
 
 - [ ] 9. AI Dungeon Master system
-  - [~] 9.1 Implement DM prompt construction
+  - [x] 9.1 Implement DM prompt construction
     - Create `lib/ai/dungeon-master.ts`
     - Build prompt template with game context
     - Include active player's Power Sheet
