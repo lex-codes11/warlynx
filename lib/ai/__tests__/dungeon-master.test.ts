@@ -1,12 +1,21 @@
 /**
- * Unit tests for AI Dungeon Master prompt construction
- * Tests: Requirements 7.1, 7.2
+ * Unit tests for AI Dungeon Master prompt construction and narrative generation
+ * Tests: Requirements 7.1, 7.2, 7.3, 7.4, 7.5
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
-import { fetchDMContext, buildDMPrompt, buildActionValidationPrompt, DMPromptContext } from '../dungeon-master';
-import { prisma } from '../../prisma';
-import { PowerSheet } from '../../turn-manager';
+// Mock OpenAI before imports
+jest.mock('openai', () => {
+  const mockCreate = jest.fn();
+  return jest.fn().mockImplementation(() => {
+    return {
+      chat: {
+        completions: {
+          create: mockCreate,
+        },
+      },
+    };
+  });
+});
 
 // Mock Prisma
 jest.mock('../../prisma', () => ({
@@ -17,7 +26,14 @@ jest.mock('../../prisma', () => ({
   },
 }));
 
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { fetchDMContext, buildDMPrompt, buildActionValidationPrompt, DMPromptContext, generateTurnNarrative, validateTurnResponse } from '../dungeon-master';
+import { prisma } from '../../prisma';
+import { PowerSheet } from '../../turn-manager';
+import OpenAI from 'openai';
+
 const mockedPrisma = prisma as jest.Mocked<typeof prisma>;
+const mockCreate = (new OpenAI() as any).chat.completions.create;
 
 describe('fetchDMContext', () => {
   const mockPowerSheet: PowerSheet = {
@@ -587,5 +603,458 @@ describe('buildActionValidationPrompt', () => {
     const prompt = buildActionValidationPrompt(action, powerSheetNoStatuses, 'Hero');
 
     expect(prompt).not.toContain('Active Statuses:');
+  });
+});
+
+describe('generateTurnNarrative', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const mockValidResponse = {
+    valid: true,
+    narrative: 'The dragon roars as you enter the cave. Flames dance along the walls, casting eerie shadows. Your companions look to you for guidance.',
+    choices: [
+      {
+        label: 'A',
+        description: 'Charge forward with your sword drawn',
+        riskLevel: 'high',
+      },
+      {
+        label: 'B',
+        description: 'Try to negotiate with the dragon',
+        riskLevel: 'medium',
+      },
+      {
+        label: 'C',
+        description: 'Use stealth to find another path',
+        riskLevel: 'low',
+      },
+      {
+        label: 'D',
+        description: 'Cast a protective spell on your party',
+        riskLevel: 'medium',
+      },
+    ],
+    statUpdates: [
+      {
+        characterId: 'char-1',
+        changes: {
+          hp: -5,
+          statuses: [
+            {
+              name: 'Intimidated',
+              description: 'Shaken by the dragon\'s presence',
+              duration: 2,
+              effect: '-10% to attack rolls',
+            },
+          ],
+        },
+      },
+    ],
+    validationError: null,
+  };
+
+  it('should successfully generate turn narrative with valid response', async () => {
+    const mockGame = {
+      id: 'game-1',
+      status: 'active',
+      toneTags: ['fantasy'],
+      difficultyCurve: 'medium',
+      houseRules: null,
+      turnOrder: ['user-1'],
+      currentTurnIndex: 0,
+      players: [
+        {
+          userId: 'user-1',
+          user: { id: 'user-1', displayName: 'Player One' },
+          character: {
+            id: 'char-1',
+            name: 'Hero',
+            fusionIngredients: 'Link + Cloud',
+            description: 'A brave warrior',
+            powerSheet: {
+              level: 1,
+              hp: 100,
+              maxHp: 100,
+              attributes: { strength: 50, agility: 50, intelligence: 50, charisma: 50, endurance: 50 },
+              abilities: [{ name: 'Sword Strike', description: 'Basic attack', powerLevel: 5, cooldown: null }],
+              weakness: 'None',
+              statuses: [],
+              perks: [],
+            },
+          },
+        },
+      ],
+      events: [],
+      turns: [],
+    };
+
+    mockedPrisma.game.findUnique.mockResolvedValue(mockGame as any);
+
+    // Mock OpenAI response
+    mockCreate.mockResolvedValueOnce({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify(mockValidResponse),
+          },
+        },
+      ],
+    });
+
+    const result = await generateTurnNarrative('game-1');
+
+    expect(result.success).toBe(true);
+    expect(result.narrative).toBe(mockValidResponse.narrative);
+    expect(result.choices).toHaveLength(4);
+    expect(result.choices[0].label).toBe('A');
+    expect(result.choices[1].label).toBe('B');
+    expect(result.choices[2].label).toBe('C');
+    expect(result.choices[3].label).toBe('D');
+    expect(result.statUpdates).toHaveLength(1);
+    expect(result.validationError).toBeNull();
+  });
+
+  it('should handle custom action validation', async () => {
+    const mockGame = {
+      id: 'game-1',
+      status: 'active',
+      toneTags: ['fantasy'],
+      difficultyCurve: 'medium',
+      houseRules: null,
+      turnOrder: ['user-1'],
+      currentTurnIndex: 0,
+      players: [
+        {
+          userId: 'user-1',
+          user: { id: 'user-1', displayName: 'Player One' },
+          character: {
+            id: 'char-1',
+            name: 'Hero',
+            fusionIngredients: 'Link + Cloud',
+            description: 'A brave warrior',
+            powerSheet: {
+              level: 1,
+              hp: 100,
+              maxHp: 100,
+              attributes: { strength: 50, agility: 50, intelligence: 50, charisma: 50, endurance: 50 },
+              abilities: [{ name: 'Sword Strike', description: 'Basic attack', powerLevel: 5, cooldown: null }],
+              weakness: 'None',
+              statuses: [],
+              perks: [],
+            },
+          },
+        },
+      ],
+      events: [],
+      turns: [],
+    };
+
+    mockedPrisma.game.findUnique.mockResolvedValue(mockGame as any);
+
+    const invalidActionResponse = {
+      valid: false,
+      validationError: 'You cannot summon meteors - this ability is not in your Power Sheet',
+      narrative: '',
+      choices: [],
+      statUpdates: [],
+    };
+
+    mockCreate.mockResolvedValueOnce({
+      choices: [
+        {
+          message: {
+            content: JSON.stringify(invalidActionResponse),
+          },
+        },
+      ],
+    });
+
+    const result = await generateTurnNarrative('game-1', 'I summon a meteor from space');
+
+    expect(result.success).toBe(false);
+    expect(result.validationError).toBe(invalidActionResponse.validationError);
+    expect(result.narrative).toBe('');
+    expect(result.choices).toHaveLength(0);
+  });
+
+  it('should retry on failure with exponential backoff', async () => {
+    const mockGame = {
+      id: 'game-1',
+      status: 'active',
+      toneTags: ['fantasy'],
+      difficultyCurve: 'medium',
+      houseRules: null,
+      turnOrder: ['user-1'],
+      currentTurnIndex: 0,
+      players: [
+        {
+          userId: 'user-1',
+          user: { id: 'user-1', displayName: 'Player One' },
+          character: {
+            id: 'char-1',
+            name: 'Hero',
+            fusionIngredients: 'Link + Cloud',
+            description: 'A brave warrior',
+            powerSheet: {
+              level: 1,
+              hp: 100,
+              maxHp: 100,
+              attributes: { strength: 50, agility: 50, intelligence: 50, charisma: 50, endurance: 50 },
+              abilities: [{ name: 'Sword Strike', description: 'Basic attack', powerLevel: 5, cooldown: null }],
+              weakness: 'None',
+              statuses: [],
+              perks: [],
+            },
+          },
+        },
+      ],
+      events: [],
+      turns: [],
+    };
+
+    mockedPrisma.game.findUnique.mockResolvedValue(mockGame as any);
+
+    // First two attempts fail, third succeeds
+    mockCreate
+      .mockRejectedValueOnce(new Error('API timeout'))
+      .mockRejectedValueOnce(new Error('Rate limit'))
+      .mockResolvedValueOnce({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify(mockValidResponse),
+            },
+          },
+        ],
+      });
+
+    const result = await generateTurnNarrative('game-1');
+
+    expect(result.success).toBe(true);
+    expect(mockCreate).toHaveBeenCalledTimes(3);
+  });
+
+  it('should return error after max retries', async () => {
+    const mockGame = {
+      id: 'game-1',
+      status: 'active',
+      toneTags: ['fantasy'],
+      difficultyCurve: 'medium',
+      houseRules: null,
+      turnOrder: ['user-1'],
+      currentTurnIndex: 0,
+      players: [
+        {
+          userId: 'user-1',
+          user: { id: 'user-1', displayName: 'Player One' },
+          character: {
+            id: 'char-1',
+            name: 'Hero',
+            fusionIngredients: 'Link + Cloud',
+            description: 'A brave warrior',
+            powerSheet: {
+              level: 1,
+              hp: 100,
+              maxHp: 100,
+              attributes: { strength: 50, agility: 50, intelligence: 50, charisma: 50, endurance: 50 },
+              abilities: [{ name: 'Sword Strike', description: 'Basic attack', powerLevel: 5, cooldown: null }],
+              weakness: 'None',
+              statuses: [],
+              perks: [],
+            },
+          },
+        },
+      ],
+      events: [],
+      turns: [],
+    };
+
+    mockedPrisma.game.findUnique.mockResolvedValue(mockGame as any);
+
+    // All attempts fail
+    mockCreate.mockRejectedValue(new Error('Persistent API failure'));
+
+    const result = await generateTurnNarrative('game-1');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(mockCreate).toHaveBeenCalledTimes(3);
+  });
+
+  it('should validate exactly 4 choices', async () => {
+    const invalidResponse = {
+      valid: true,
+      narrative: 'Some narrative',
+      choices: [
+        { label: 'A', description: 'Choice A', riskLevel: 'low' },
+        { label: 'B', description: 'Choice B', riskLevel: 'medium' },
+        { label: 'C', description: 'Choice C', riskLevel: 'high' },
+        // Missing choice D
+      ],
+      statUpdates: [],
+      validationError: null,
+    };
+
+    expect(() => validateTurnResponse(invalidResponse)).toThrow(
+      'must have exactly 4 choices'
+    );
+  });
+
+  it('should validate choice labels are A, B, C, D in order', async () => {
+    const invalidResponse = {
+      valid: true,
+      narrative: 'Some narrative',
+      choices: [
+        { label: 'A', description: 'Choice A', riskLevel: 'low' },
+        { label: 'C', description: 'Choice C', riskLevel: 'medium' }, // Wrong order
+        { label: 'B', description: 'Choice B', riskLevel: 'high' },
+        { label: 'D', description: 'Choice D', riskLevel: 'extreme' },
+      ],
+      statUpdates: [],
+      validationError: null,
+    };
+
+    expect(() => validateTurnResponse(invalidResponse)).toThrow(
+      'expected B, got C'
+    );
+  });
+
+  it('should validate risk levels', async () => {
+    const invalidResponse = {
+      valid: true,
+      narrative: 'Some narrative',
+      choices: [
+        { label: 'A', description: 'Choice A', riskLevel: 'low' },
+        { label: 'B', description: 'Choice B', riskLevel: 'invalid' }, // Invalid risk level
+        { label: 'C', description: 'Choice C', riskLevel: 'high' },
+        { label: 'D', description: 'Choice D', riskLevel: 'extreme' },
+      ],
+      statUpdates: [],
+      validationError: null,
+    };
+
+    expect(() => validateTurnResponse(invalidResponse)).toThrow(
+      'Invalid risk level'
+    );
+  });
+
+  it('should validate stat updates structure', async () => {
+    const invalidResponse = {
+      valid: true,
+      narrative: 'Some narrative',
+      choices: [
+        { label: 'A', description: 'Choice A', riskLevel: 'low' },
+        { label: 'B', description: 'Choice B', riskLevel: 'medium' },
+        { label: 'C', description: 'Choice C', riskLevel: 'high' },
+        { label: 'D', description: 'Choice D', riskLevel: 'extreme' },
+      ],
+      statUpdates: [
+        {
+          characterId: 'char-1',
+          changes: {
+            hp: 'invalid', // Should be number
+          },
+        },
+      ],
+      validationError: null,
+    };
+
+    expect(() => validateTurnResponse(invalidResponse)).toThrow(
+      'Invalid hp in stat update'
+    );
+  });
+
+  it('should handle empty stat updates', async () => {
+    const validResponse = {
+      valid: true,
+      narrative: 'Some narrative',
+      choices: [
+        { label: 'A', description: 'Choice A', riskLevel: 'low' },
+        { label: 'B', description: 'Choice B', riskLevel: 'medium' },
+        { label: 'C', description: 'Choice C', riskLevel: 'high' },
+        { label: 'D', description: 'Choice D', riskLevel: 'extreme' },
+      ],
+      statUpdates: [],
+      validationError: null,
+    };
+
+    const result = validateTurnResponse(validResponse);
+
+    expect(result.success).toBe(true);
+    expect(result.statUpdates).toHaveLength(0);
+  });
+
+  it('should validate missing narrative', async () => {
+    const invalidResponse = {
+      valid: true,
+      narrative: null, // Missing narrative
+      choices: [
+        { label: 'A', description: 'Choice A', riskLevel: 'low' },
+        { label: 'B', description: 'Choice B', riskLevel: 'medium' },
+        { label: 'C', description: 'Choice C', riskLevel: 'high' },
+        { label: 'D', description: 'Choice D', riskLevel: 'extreme' },
+      ],
+      statUpdates: [],
+      validationError: null,
+    };
+
+    expect(() => validateTurnResponse(invalidResponse)).toThrow(
+      'missing or invalid narrative'
+    );
+  });
+
+  it('should handle OpenAI returning no content', async () => {
+    const mockGame = {
+      id: 'game-1',
+      status: 'active',
+      toneTags: ['fantasy'],
+      difficultyCurve: 'medium',
+      houseRules: null,
+      turnOrder: ['user-1'],
+      currentTurnIndex: 0,
+      players: [
+        {
+          userId: 'user-1',
+          user: { id: 'user-1', displayName: 'Player One' },
+          character: {
+            id: 'char-1',
+            name: 'Hero',
+            fusionIngredients: 'Link + Cloud',
+            description: 'A brave warrior',
+            powerSheet: {
+              level: 1,
+              hp: 100,
+              maxHp: 100,
+              attributes: { strength: 50, agility: 50, intelligence: 50, charisma: 50, endurance: 50 },
+              abilities: [{ name: 'Sword Strike', description: 'Basic attack', powerLevel: 5, cooldown: null }],
+              weakness: 'None',
+              statuses: [],
+              perks: [],
+            },
+          },
+        },
+      ],
+      events: [],
+      turns: [],
+    };
+
+    mockedPrisma.game.findUnique.mockResolvedValue(mockGame as any);
+
+    mockCreate.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: null, // No content
+          },
+        },
+      ],
+    });
+
+    const result = await generateTurnNarrative('game-1');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('No response content');
   });
 });

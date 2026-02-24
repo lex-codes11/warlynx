@@ -211,7 +211,7 @@ This implementation plan breaks down the Warlynx multiplayer AI game into discre
     - **Property 19: AI context completeness**
     - **Validates: Requirements 7.1, 7.2**
   
-  - [~] 9.3 Implement turn narrative generation
+  - [x] 9.3 Implement turn narrative generation
     - Call GPT-4 with constructed prompt
     - Parse response for narrative, choices, and stat updates
     - Validate response structure (exactly 4 choices)

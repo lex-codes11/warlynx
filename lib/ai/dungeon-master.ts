@@ -1,11 +1,22 @@
 /**
- * AI Dungeon Master Prompt Construction
+ * AI Dungeon Master Prompt Construction and Narrative Generation
  * Builds comprehensive prompts for GPT-4 narrative generation
- * Validates: Requirements 7.1, 7.2
+ * Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5
  */
 
+import OpenAI from 'openai';
 import { prisma } from '../prisma';
 import { PowerSheet } from '../turn-manager';
+
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Configuration for retry logic
+const MAX_RETRIES = 3;
+const INITIAL_BACKOFF_MS = 1000;
+const BACKOFF_MULTIPLIER = 2;
 
 /**
  * Game context for DM prompt construction
@@ -43,6 +54,61 @@ export interface DMPromptContext {
     createdAt: Date;
   }>;
   currentTurn: number;
+}
+
+/**
+ * Choice presented to the player
+ */
+export interface Choice {
+  label: 'A' | 'B' | 'C' | 'D';
+  description: string;
+  riskLevel: 'low' | 'medium' | 'high' | 'extreme';
+}
+
+/**
+ * Stat changes for a character
+ */
+export interface StatUpdate {
+  characterId: string;
+  changes: {
+    hp?: number;
+    level?: number;
+    attributes?: Partial<PowerSheet['attributes']>;
+    statuses?: Array<{
+      name: string;
+      description: string;
+      duration: number;
+      effect: string;
+    }>;
+    newPerks?: Array<{
+      name: string;
+      description: string;
+      unlockedAt: number;
+    }>;
+  };
+}
+
+/**
+ * Turn narrative response from AI
+ */
+export interface TurnNarrativeResponse {
+  success: boolean;
+  narrative: string;
+  choices: Choice[];
+  statUpdates: StatUpdate[];
+  validationError: string | null;
+  error?: string;
+}
+
+/**
+ * Raw AI response structure
+ */
+interface AITurnResponse {
+  valid: boolean;
+  narrative: string;
+  choices: Choice[];
+  statUpdates: StatUpdate[];
+  validationError: string | null;
 }
 
 /**
@@ -380,4 +446,221 @@ Return JSON:
   "suggestedAlternatives": ["alternative 1", "alternative 2"] (optional, only if invalid)
 }
 `;
+}
+
+/**
+ * Generate turn narrative using GPT-4
+ * Implements retry logic with exponential backoff
+ * 
+ * **Validates: Requirements 7.3, 7.4, 7.5**
+ */
+export async function generateTurnNarrative(
+  gameId: string,
+  customAction?: string
+): Promise<TurnNarrativeResponse> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const result = await attemptTurnNarrativeGeneration(gameId, customAction);
+      return result;
+    } catch (error) {
+      lastError = error as Error;
+      console.error(
+        `Turn narrative generation attempt ${attempt + 1} failed:`,
+        error
+      );
+
+      // If this isn't the last attempt, wait before retrying
+      if (attempt < MAX_RETRIES - 1) {
+        const backoffTime = INITIAL_BACKOFF_MS * Math.pow(BACKOFF_MULTIPLIER, attempt);
+        console.log(`Retrying in ${backoffTime}ms...`);
+        await sleep(backoffTime);
+      }
+    }
+  }
+
+  return {
+    success: false,
+    narrative: '',
+    choices: [],
+    statUpdates: [],
+    validationError: null,
+    error: lastError?.message || 'Failed to generate turn narrative after multiple attempts',
+  };
+}
+
+/**
+ * Single attempt to generate turn narrative
+ */
+async function attemptTurnNarrativeGeneration(
+  gameId: string,
+  customAction?: string
+): Promise<TurnNarrativeResponse> {
+  // Fetch game context
+  const context = await fetchDMContext(gameId);
+
+  // Build the prompt
+  const prompt = buildDMPrompt(context, customAction);
+
+  // Call GPT-4
+  const response = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You are a Dungeon Master for a multiplayer narrative game. You must respond with valid JSON only. Always generate exactly 4 choices labeled A, B, C, D.',
+      },
+      {
+        role: 'user',
+        content: prompt,
+      },
+    ],
+    temperature: 0.8,
+    max_tokens: 3000,
+    response_format: { type: 'json_object' },
+  });
+
+  const content = response.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response content from OpenAI');
+  }
+
+  // Parse and validate response
+  const parsedResponse = JSON.parse(content) as AITurnResponse;
+  const validatedResponse = validateTurnResponse(parsedResponse);
+
+  return validatedResponse;
+}
+
+/**
+ * Validate the AI response structure
+ * 
+ * **Validates: Requirement 7.4** - Exactly 4 choices labeled A, B, C, D
+ */
+export function validateTurnResponse(data: any): TurnNarrativeResponse {
+  // Check if this is an invalid action response
+  if (data.valid === false) {
+    if (!data.validationError || typeof data.validationError !== 'string') {
+      throw new Error('Invalid response: missing validationError for invalid action');
+    }
+    return {
+      success: false,
+      narrative: '',
+      choices: [],
+      statUpdates: [],
+      validationError: data.validationError,
+    };
+  }
+
+  // Validate narrative
+  if (!data.narrative || typeof data.narrative !== 'string') {
+    throw new Error('Invalid response: missing or invalid narrative');
+  }
+
+  // Validate choices array
+  if (!Array.isArray(data.choices)) {
+    throw new Error('Invalid response: choices must be an array');
+  }
+
+  // CRITICAL: Validate exactly 4 choices
+  if (data.choices.length !== 4) {
+    throw new Error(
+      `Invalid response: must have exactly 4 choices, got ${data.choices.length}`
+    );
+  }
+
+  // Validate each choice
+  const expectedLabels: Array<'A' | 'B' | 'C' | 'D'> = ['A', 'B', 'C', 'D'];
+  const validatedChoices: Choice[] = data.choices.map((choice: any, index: number) => {
+    const expectedLabel = expectedLabels[index];
+
+    if (choice.label !== expectedLabel) {
+      throw new Error(
+        `Invalid choice label at index ${index}: expected ${expectedLabel}, got ${choice.label}`
+      );
+    }
+
+    if (!choice.description || typeof choice.description !== 'string') {
+      throw new Error(`Invalid choice description at index ${index}`);
+    }
+
+    const validRiskLevels = ['low', 'medium', 'high', 'extreme'];
+    if (!validRiskLevels.includes(choice.riskLevel)) {
+      throw new Error(
+        `Invalid risk level at index ${index}: must be one of ${validRiskLevels.join(', ')}`
+      );
+    }
+
+    return {
+      label: choice.label,
+      description: choice.description,
+      riskLevel: choice.riskLevel,
+    };
+  });
+
+  // Validate stat updates
+  if (!Array.isArray(data.statUpdates)) {
+    throw new Error('Invalid response: statUpdates must be an array');
+  }
+
+  const validatedStatUpdates: StatUpdate[] = data.statUpdates.map(
+    (update: any, index: number) => {
+      if (!update.characterId || typeof update.characterId !== 'string') {
+        throw new Error(`Invalid characterId in stat update at index ${index}`);
+      }
+
+      if (!update.changes || typeof update.changes !== 'object') {
+        throw new Error(`Invalid changes object in stat update at index ${index}`);
+      }
+
+      // Validate optional fields if present
+      if (update.changes.hp !== undefined && typeof update.changes.hp !== 'number') {
+        throw new Error(`Invalid hp in stat update at index ${index}`);
+      }
+
+      if (update.changes.level !== undefined && typeof update.changes.level !== 'number') {
+        throw new Error(`Invalid level in stat update at index ${index}`);
+      }
+
+      if (update.changes.attributes !== undefined) {
+        if (typeof update.changes.attributes !== 'object') {
+          throw new Error(`Invalid attributes in stat update at index ${index}`);
+        }
+      }
+
+      if (update.changes.statuses !== undefined) {
+        if (!Array.isArray(update.changes.statuses)) {
+          throw new Error(`Invalid statuses in stat update at index ${index}`);
+        }
+      }
+
+      if (update.changes.newPerks !== undefined) {
+        if (!Array.isArray(update.changes.newPerks)) {
+          throw new Error(`Invalid newPerks in stat update at index ${index}`);
+        }
+      }
+
+      return {
+        characterId: update.characterId,
+        changes: update.changes,
+      };
+    }
+  );
+
+  return {
+    success: true,
+    narrative: data.narrative,
+    choices: validatedChoices,
+    statUpdates: validatedStatUpdates,
+    validationError: null,
+  };
+}
+
+/**
+ * Sleep utility for exponential backoff
+ */
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
