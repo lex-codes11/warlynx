@@ -121,59 +121,16 @@ function checkPowerScaling(
 
 /**
  * Check if action conflicts with character weakness
+ * NOTE: Weaknesses should affect EFFECTIVENESS, not PREVENT moves
+ * A character can still attempt moves related to their weakness
  */
 function checkWeaknessConflict(
   normalizedAction: string,
   powerSheet: PowerSheet,
   characterName: string
 ): ActionValidationResult | null {
-  const weakness = powerSheet.weakness.toLowerCase();
-
-  // Extract key weakness terms
-  const weaknessTerms = extractWeaknessTerms(weakness);
-
-  // Check if action directly conflicts with weakness
-  for (const term of weaknessTerms) {
-    if (normalizedAction.includes(term)) {
-      return {
-        valid: false,
-        reason: `${characterName} has a weakness: "${powerSheet.weakness}". The action conflicts with this weakness. Please choose an action that doesn't involve ${term}.`,
-        suggestedAlternatives: powerSheet.abilities
-          .filter(a => !a.name.toLowerCase().includes(term))
-          .slice(0, 3)
-          .map(a => a.name),
-      };
-    }
-  }
-
-  // Check for specific weakness patterns
-  if (weakness.includes("water") && normalizedAction.match(/swim|dive|underwater/)) {
-    return {
-      valid: false,
-      reason: `${characterName} has a weakness to water. This action would put them in a vulnerable position.`,
-      suggestedAlternatives: powerSheet.abilities.slice(0, 3).map(a => a.name),
-    };
-  }
-
-  if (weakness.includes("fire") && normalizedAction.match(/burn|flame|ignite/)) {
-    return {
-      valid: false,
-      reason: `${characterName} has a weakness to fire. This action would be dangerous or impossible.`,
-      suggestedAlternatives: powerSheet.abilities.slice(0, 3).map(a => a.name),
-    };
-  }
-
-  if (weakness.includes("magic") && normalizedAction.match(/spell|enchant|magical/)) {
-    return {
-      valid: false,
-      reason: `${characterName} has a weakness related to magic. This action conflicts with that limitation.`,
-      suggestedAlternatives: powerSheet.abilities
-        .filter(a => !a.description.toLowerCase().includes("magic"))
-        .slice(0, 3)
-        .map(a => a.name),
-    };
-  }
-
+  // Weaknesses don't prevent actions - they just make them less effective
+  // The DM will handle effectiveness in the narrative
   return null;
 }
 

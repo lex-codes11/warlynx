@@ -287,6 +287,49 @@ export function CharacterBuilder({
           )}
         </button>
       </form>
+
+      {/* Epic Loading Overlay */}
+      {isLoading && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+              Forging Your Character...
+            </h3>
+            
+            <div className="space-y-4">
+              {/* Progress Bar */}
+              <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-pulse"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-shimmer"></div>
+              </div>
+
+              {/* Loading Steps */}
+              <div className="space-y-2 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Analyzing fusion ingredients...</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse delay-100"></div>
+                  <span>Generating abilities and weaknesses...</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-pink-500 rounded-full animate-pulse delay-200"></div>
+                  <span>Creating character image...</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse delay-300"></div>
+                  <span>Calculating power sheet...</span>
+                </div>
+              </div>
+
+              <p className="text-center text-gray-500 text-xs mt-4">
+                This may take 30-60 seconds...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
