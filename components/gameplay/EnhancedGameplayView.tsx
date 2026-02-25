@@ -205,10 +205,87 @@ export function EnhancedGameplayView({
         {/* Ambient Background (Requirement 1.2) */}
         <AmbientBackground intensity="medium" />
 
-        <div className="max-w-7xl mx-auto py-6 px-4 relative z-10">
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Left Column: Story and Actions */}
-            <div className="lg:col-span-2 space-y-6">
+        <div className="max-w-[1800px] mx-auto py-4 px-4 relative z-10">
+          {/* Compact Turn Indicator at top */}
+          <div className="mb-4">
+            <ErrorBoundary
+              fallback={
+                <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-lg p-2">
+                  <p className="text-red-400 text-center text-xs">
+                    Unable to load turn indicator
+                  </p>
+                </div>
+              }
+            >
+              <div className="bg-gray-900/40 backdrop-blur-md border border-cyan-500/30 rounded-lg p-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-cyan-400 text-sm font-semibold">Current Turn:</span>
+                    <span className="text-gray-200 text-sm">
+                      {players.find((p) => p.userId === currentPlayerId)?.displayName || 'Unknown'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {players.map((player) => {
+                      const isActive = player.userId === currentPlayerId;
+                      return (
+                        <div
+                          key={player.userId}
+                          className={`px-3 py-1 rounded-full text-xs ${
+                            isActive
+                              ? 'bg-cyan-500/20 border border-cyan-500/50 text-cyan-300'
+                              : 'bg-gray-800/50 border border-gray-700/50 text-gray-400'
+                          }`}
+                        >
+                          {player.displayName}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </ErrorBoundary>
+          </div>
+
+          <div className="grid lg:grid-cols-12 gap-4">
+            {/* Left Column: Character Info */}
+            <div className="lg:col-span-3 space-y-4">
+              {/* Power Cards (Requirement 10.2) */}
+              {characters.map((char: any) => {
+                const charPlayer = players.find((p) => p.characterId === char.id);
+                const isActive = charPlayer?.userId === currentPlayerId;
+                
+                return (
+                  <ErrorBoundary
+                    key={char.id}
+                    fallback={
+                      <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
+                        <p className="text-red-400 text-center text-sm">
+                          Unable to load character card
+                        </p>
+                      </div>
+                    }
+                  >
+                    <PowerCard
+                      character={char}
+                      isActive={isActive}
+                    />
+                  </ErrorBoundary>
+                );
+              })}
+
+              {/* Stats Display */}
+              <StatsDisplay characters={characters} />
+
+              {/* Ability Summary */}
+              <AbilitySummaryContainer 
+                gameId={game.id}
+                initialCharacters={characters}
+              />
+            </div>
+
+            {/* Middle Column: Story and Actions */}
+            <div className="lg:col-span-9 space-y-4">
               {/* Battle Feed (Requirement 10.1) */}
               <ErrorBoundary
                 fallback={
@@ -243,60 +320,6 @@ export function EnhancedGameplayView({
 
               {/* Typing Indicator */}
               <TypingIndicator typingPlayers={typingPlayers} />
-            </div>
-
-            {/* Right Column: Game State */}
-            <div className="space-y-6">
-              {/* Turn Indicator (Requirement 10.5) */}
-              <ErrorBoundary
-                fallback={
-                  <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
-                    <p className="text-red-400 text-center text-sm">
-                      Unable to load turn indicator
-                    </p>
-                  </div>
-                }
-              >
-                <TurnIndicator
-                  currentPlayerId={currentPlayerId}
-                  players={players}
-                />
-              </ErrorBoundary>
-
-              {/* Power Cards (Requirement 10.2) */}
-              <div className="space-y-4">
-                {characters.map((char: any) => {
-                  const charPlayer = players.find((p) => p.characterId === char.id);
-                  const isActive = charPlayer?.userId === currentPlayerId;
-                  
-                  return (
-                    <ErrorBoundary
-                      key={char.id}
-                      fallback={
-                        <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
-                          <p className="text-red-400 text-center text-sm">
-                            Unable to load character card
-                          </p>
-                        </div>
-                      }
-                    >
-                      <PowerCard
-                        character={char}
-                        isActive={isActive}
-                      />
-                    </ErrorBoundary>
-                  );
-                })}
-              </div>
-
-              {/* Stats Display */}
-              <StatsDisplay characters={characters} />
-
-              {/* Ability Summary */}
-              <AbilitySummaryContainer 
-                gameId={game.id}
-                initialCharacters={characters}
-              />
             </div>
           </div>
         </div>

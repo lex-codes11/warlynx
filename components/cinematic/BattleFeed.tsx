@@ -138,7 +138,7 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
     <div className={`${GLASS_PANEL_CLASSES.glowCyan} w-full rounded-xl overflow-hidden`}>
       <div 
         ref={feedRef}
-        className="max-h-[600px] overflow-y-auto scroll-smooth p-6"
+        className="max-h-[400px] overflow-y-auto scroll-smooth p-6"
         style={{
           scrollBehavior: 'smooth',
           scrollbarWidth: 'thin',
