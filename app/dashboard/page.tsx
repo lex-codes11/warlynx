@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth-options";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import Image from "next/image";
 
 export const metadata = {
   title: "Dashboard - Warlynx",
@@ -58,9 +59,18 @@ export default async function DashboardPage() {
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome, {session.user.displayName || session.user.email}!
-            </h1>
+            <div className="flex items-center gap-4">
+              <Image
+                src="/warlynx-logo.png"
+                alt="Warlynx Logo"
+                width={60}
+                height={40}
+                className="rounded"
+              />
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome, {session.user.displayName || session.user.email}!
+              </h1>
+            </div>
             <Link
               href="/game/create"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"

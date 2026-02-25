@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 
@@ -9,6 +10,16 @@ export default async function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
       <div className="max-w-7xl mx-auto px-4 py-16">
         <div className="text-center mb-16">
+          <div className="flex justify-center mb-8">
+            <Image
+              src="/warlynx-logo.png"
+              alt="Warlynx Logo"
+              width={300}
+              height={200}
+              priority
+              className="rounded-lg"
+            />
+          </div>
           <h1 className="text-6xl font-bold mb-6">Warlynx</h1>
           <p className="text-2xl text-gray-300 mb-8">
             AI-Powered Multiplayer Adventure Game

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 export function SignUpForm() {
   const router = useRouter();
@@ -40,6 +41,16 @@ export function SignUpForm() {
 
   return (
     <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+      <div className="flex justify-center mb-6">
+        <Image
+          src="/warlynx-logo.png"
+          alt="Warlynx Logo"
+          width={200}
+          height={133}
+          priority
+          className="rounded-lg"
+        />
+      </div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
         Create your Warlynx account
       </h2>
