@@ -211,6 +211,7 @@ Return JSON in this format:
     ],
     temperature: 0.7,
     max_tokens: 300,
+    response_format: { type: 'json_object' },
   });
 
   const content = response.choices[0]?.message?.content;

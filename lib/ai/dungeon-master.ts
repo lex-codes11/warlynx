@@ -380,12 +380,21 @@ Generate the next turn of the game:
    - No choice should be obviously "correct" - create interesting dilemmas
    - Consider the character's weaknesses when presenting options
 
-3. Suggest stat updates if the narrative warrants them:
-   - HP changes from damage or healing
-   - Status effects (buffs, debuffs, conditions)
-   - Level ups if appropriate (Skyrim-style frequent small upgrades)
-   - New perks if leveling up
+3. **CRITICAL - STAT UPDATES**: You MUST generate stat updates for ALL characters affected by the narrative:
+   - **WHEN DAMAGE OCCURS**: Generate stat updates for BOTH attacker AND defender
+     * Attacker: May gain experience, use resources, or trigger abilities
+     * Defender: MUST receive HP damage (negative hp value)
+   - **WHEN HEALING OCCURS**: Character receives HP healing (positive hp value)
+   - **STATUS EFFECTS**: Apply buffs, debuffs, or conditions to affected characters
+   - **LEVEL UPS**: Award level ups for significant achievements
+   - **NEW PERKS**: Grant perks when leveling up
    - **CRITICAL**: Use the exact Character ID from the character list above, NOT the character name
+   
+   EXAMPLE: If Charizard attacks Blastoise and deals damage, you MUST include:
+   {
+     "characterId": "cmm1475t600037h8n05vva97l",
+     "changes": { "hp": -15 }
+   }
 
 CRITICAL RULES:
 - KEEP IT SHORT - Maximum 8 sentences for narrative
@@ -581,6 +590,15 @@ async function attemptTurnNarrativeGeneration(
 
   // Parse and validate response
   const parsedResponse = JSON.parse(content) as AITurnResponse;
+  
+  console.log('Raw AI response before validation:', {
+    statUpdatesCount: parsedResponse.statUpdates?.length || 0,
+    statUpdates: parsedResponse.statUpdates?.map(u => ({
+      characterId: u.characterId,
+      changes: u.changes,
+    })),
+  });
+  
   const validatedResponse = validateTurnResponse(parsedResponse, context);
 
   return validatedResponse;

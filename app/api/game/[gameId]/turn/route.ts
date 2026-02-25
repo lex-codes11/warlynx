@@ -294,6 +294,17 @@ export async function POST(
         isStandardChoice ? undefined : action
       );
 
+      console.log('DM Response received:', {
+        success: dmResponse.success,
+        narrativeLength: dmResponse.narrative?.length || 0,
+        choicesCount: dmResponse.choices?.length || 0,
+        statUpdatesCount: dmResponse.statUpdates?.length || 0,
+        statUpdates: dmResponse.statUpdates?.map(u => ({
+          characterId: u.characterId,
+          changes: u.changes,
+        })),
+      });
+
       if (!dmResponse.success) {
         // Update turn to failed state
         await prisma.turn.update({
