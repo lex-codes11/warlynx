@@ -268,6 +268,7 @@ ${ps.perks.length > 0 ? `Perks:\n${ps.perks.map(p => `  - ${p.name}: ${p.descrip
     const status = char.powerSheet.hp <= 0 ? ' [DEAD]' : '';
     return `
 ${char.name} (${char.displayName})${status}
+Character ID: ${char.id}
 Fusion: ${char.fusionIngredients}
 ${formatPowerSheet(char.powerSheet)}
 `.trim();
@@ -382,6 +383,7 @@ Generate the next turn of the game:
    - Status effects (buffs, debuffs, conditions)
    - Level ups if appropriate (Skyrim-style frequent small upgrades)
    - New perks if leveling up
+   - **CRITICAL**: Use the exact Character ID from the character list above, NOT the character name
 
 CRITICAL RULES:
 - KEEP IT SHORT - Maximum 8 sentences for narrative
@@ -396,6 +398,7 @@ CRITICAL RULES:
 - ALWAYS update stats based on narrative events
 - Maintain consistency with recent events and character states
 - Keep the narrative engaging and the stakes meaningful
+- **USE CHARACTER IDs NOT NAMES** in statUpdates (e.g., use "${allCharacters[0]?.id || 'cm...'}" not "${allCharacters[0]?.name || 'CharacterName'}")
 
 Return your response in the following JSON format:
 {
@@ -425,7 +428,7 @@ Return your response in the following JSON format:
   ],
   "statUpdates": [
     {
-      "characterId": "character_id",
+      "characterId": "USE_ACTUAL_CHARACTER_ID_FROM_ABOVE_NOT_NAME",
       "changes": {
         "hp": number (optional),
         "level": number (optional),

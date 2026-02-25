@@ -137,10 +137,10 @@ export function EnhancedGameplayView({
   useEffect(() => {
     const isPlayerTurn = game.turnOrder?.[game.currentTurnIndex] === userId;
 
-    if (isPlayerTurn && !isLoadingMoves) {
+    if (isPlayerTurn && !isLoadingMoves && !isSubmittingMove) {
       loadAIMoves();
     }
-  }, [game.currentTurnIndex, userId]);
+  }, [game.currentTurnIndex, userId, isLoadingMoves, isSubmittingMove]);
 
   const loadAIMoves = async () => {
     setIsLoadingMoves(true);
@@ -168,6 +168,18 @@ export function EnhancedGameplayView({
   };
 
   const handleMoveSelected = async (move: string) => {
+    // Double-check it's actually the player's turn before submitting
+    const currentActivePlayer = game.turnOrder?.[game.currentTurnIndex];
+    if (currentActivePlayer !== userId) {
+      console.warn('Move submission blocked: not your turn', {
+        currentActivePlayer,
+        userId,
+        currentTurnIndex: game.currentTurnIndex,
+      });
+      alert('It is not your turn. Please wait for the other player.');
+      return;
+    }
+
     handleTypingStop(); // Clear typing indicator (Requirement 11.4)
     setIsSubmittingMove(true);
     
@@ -181,7 +193,14 @@ export function EnhancedGameplayView({
       if (!response.ok) {
         const data = await response.json();
         console.error('Move submission failed:', data.error?.message);
-        alert(data.error?.message || 'Failed to submit move');
+        
+        // If it's a "not your turn" or "turn already completed" error, refresh the page
+        if (data.error?.code === 'NOT_YOUR_TURN' || data.error?.code === 'TURN_ALREADY_COMPLETED') {
+          alert(data.error.message + ' Refreshing...');
+          router.refresh();
+        } else {
+          alert(data.error?.message || 'Failed to submit move');
+        }
         setIsSubmittingMove(false);
       }
       // Don't reload - real-time subscription will update the UI

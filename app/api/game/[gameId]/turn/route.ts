@@ -229,8 +229,23 @@ export async function POST(
           },
           { status: 409 }
         );
+      } else if (existingTurn.phase === 'completed') {
+        // Turn completed but game state not updated yet - this is a race condition
+        // The other player's turn just completed, refresh to get new state
+        console.log(`Turn ${existingTurn.turnIndex} already completed, client needs to refresh`);
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'TURN_ALREADY_COMPLETED',
+              message: 'This turn has already been completed. Please refresh the page.',
+              retryable: false,
+            },
+          },
+          { status: 409 }
+        );
       } else {
-        // Turn exists but not in resolving state - shouldn't happen
+        // Turn exists but not in resolving or completed state - shouldn't happen
         return NextResponse.json(
           {
             success: false,
@@ -245,15 +260,35 @@ export async function POST(
       }
     }
 
-    // Create turn record
-    const turn = await prisma.turn.create({
-      data: {
-        gameId,
-        turnIndex: game.currentTurnIndex,
-        activePlayerId: userId,
-        phase: 'resolving',
-      },
-    });
+    // Create turn record with unique constraint check
+    let turn;
+    try {
+      turn = await prisma.turn.create({
+        data: {
+          gameId,
+          turnIndex: game.currentTurnIndex,
+          activePlayerId: userId,
+          phase: 'resolving',
+        },
+      });
+    } catch (error: any) {
+      // Handle unique constraint violation (race condition)
+      if (error.code === 'P2002') {
+        console.log('Race condition detected: another turn was created simultaneously');
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'TURN_ALREADY_PROCESSING',
+              message: 'Another player is processing this turn. Please wait.',
+              retryable: true,
+            },
+          },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
 
     try {
       // Process action through DM
