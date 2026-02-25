@@ -135,41 +135,28 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
   }, [safeEvents.length, prefersReducedMotion]);
 
   return (
-    <div 
-      ref={feedRef}
-      className="w-full space-y-3 max-h-[600px] overflow-y-auto scroll-smooth"
-      style={{
-        scrollBehavior: 'smooth',
-        scrollbarWidth: 'thin',
-        scrollbarColor: 'rgba(6, 182, 212, 0.3) rgba(17, 24, 39, 0.6)'
-      }}
-    >
-      {safeEvents.length === 0 ? (
-        <motion.div 
-          className={`${GLASS_PANEL_CLASSES.glowCyan} p-6 text-center`}
-          variants={prefersReducedMotion ? undefined : fadeIn}
-          initial={prefersReducedMotion ? false : "initial"}
-          animate={prefersReducedMotion ? false : "animate"}
-        >
-          <p className="text-gray-400 text-sm">Awaiting game events...</p>
-        </motion.div>
-      ) : (
-        <AnimatePresence mode="popLayout">
-          {safeEvents.map((event, index) => (
-            <motion.div
-              key={event.id}
-              variants={prefersReducedMotion ? undefined : slideUp}
-              initial={prefersReducedMotion ? false : "initial"}
-              animate={prefersReducedMotion ? false : "animate"}
-              exit={prefersReducedMotion ? undefined : "exit"}
-              layout={!prefersReducedMotion}
-              className={`${GLASS_PANEL_CLASSES.glowCyan} w-full p-3`}
-            >
-              <EventContent event={event} onEventRead={onEventRead} simplifyEffects={simplifyEffects} />
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      )}
+    <div className={`${GLASS_PANEL_CLASSES.glowCyan} w-full rounded-xl overflow-hidden`}>
+      <div 
+        ref={feedRef}
+        className="max-h-[600px] overflow-y-auto scroll-smooth p-6"
+        style={{
+          scrollBehavior: 'smooth',
+          scrollbarWidth: 'thin',
+          scrollbarColor: 'rgba(6, 182, 212, 0.3) rgba(17, 24, 39, 0.6)'
+        }}
+      >
+        {safeEvents.length === 0 ? (
+          <div className="py-8 text-center">
+            <p className="text-gray-400 text-sm">Awaiting game events...</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {safeEvents.map((event, index) => (
+              <EventContent key={event.id} event={event} onEventRead={onEventRead} simplifyEffects={simplifyEffects} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -223,44 +210,48 @@ function EventContent({
   };
 
   return (
-    <div className="space-y-2">
-      {/* Character attribution */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 flex-1">
+    <div className="group hover:bg-gray-800/20 rounded-lg p-3 -mx-3 transition-colors">
+      {/* Character attribution and TTS button */}
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           {event.character && (
             <>
               {event.character.imageUrl && (
                 <img
                   src={event.character.imageUrl}
                   alt={event.character.name}
-                  className="w-8 h-8 rounded-full border-2 border-cyan-500/50 flex-shrink-0"
+                  className="w-6 h-6 rounded-full border border-cyan-500/50 flex-shrink-0"
                 />
               )}
-              <span className="text-cyan-400 font-semibold text-sm">
+              <span className="text-cyan-400 font-semibold text-xs truncate">
                 {event.character.name}
               </span>
             </>
           )}
           {!event.character && (
-            <span className="text-purple-400 font-semibold text-sm">
-              📖 Narrator
+            <span className="text-purple-400 font-semibold text-xs flex items-center gap-1">
+              <span>📖</span>
+              <span>Narrator</span>
             </span>
           )}
+          <span className="text-xs text-gray-600 flex-shrink-0">
+            {event.timestamp && new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
         </div>
 
         {/* TTS Play Button */}
         <button
           onClick={handlePlayTTS}
-          className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors"
+          className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded hover:bg-cyan-500/20 transition-colors opacity-0 group-hover:opacity-100"
           aria-label={isPlaying ? 'Stop narration' : 'Play narration'}
           title={isPlaying ? 'Stop narration' : 'Play narration'}
         >
           {isPlaying ? (
-            <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-3 h-3 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
             </svg>
           ) : (
-            <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-3 h-3 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
               <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
             </svg>
           )}
@@ -268,13 +259,13 @@ function EventContent({
       </div>
 
       {/* Main content */}
-      <div className="text-gray-200 text-sm leading-relaxed pl-11">
+      <div className="text-gray-200 text-sm leading-relaxed">
         {event.content}
       </div>
 
       {/* Ability highlight (if applicable) */}
       {event.ability && (
-        <div className="ml-11 mt-2">
+        <div className="mt-2">
           <div 
             className="bg-gradient-to-r from-purple-900/20 via-cyan-900/20 to-purple-900/20 rounded-lg p-3 border border-purple-500/30"
             style={{
@@ -302,13 +293,6 @@ function EventContent({
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* Timestamp */}
-      {event.timestamp && (
-        <div className="text-xs text-gray-600 pl-11">
-          {new Date(event.timestamp).toLocaleTimeString()}
         </div>
       )}
     </div>

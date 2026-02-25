@@ -197,9 +197,9 @@ export async function POST(
     });
 
     if (existingTurn) {
-      // If turn is stuck in resolving for more than 2 minutes, allow retry
-      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-      if (existingTurn.phase === 'resolving' && existingTurn.startedAt < twoMinutesAgo) {
+      // If turn is stuck in resolving for more than 30 seconds, allow retry
+      const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
+      if (existingTurn.phase === 'resolving' && existingTurn.startedAt < thirtySecondsAgo) {
         // Delete stuck turn and allow retry
         await prisma.turn.delete({
           where: { id: existingTurn.id },
