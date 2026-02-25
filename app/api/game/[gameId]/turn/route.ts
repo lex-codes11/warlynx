@@ -413,17 +413,47 @@ export async function POST(
 
       // Calculate HP change for better messaging
       const hpChange = updatedPowerSheet.hp - oldPowerSheet.hp;
+      const levelChange = updatedPowerSheet.level - oldPowerSheet.level;
       const statChanges = dmResponse.statUpdates.find(u => u.characterId === characterId)?.changes;
       
       // Create detailed stat change message
-      let statChangeContent = '';
+      const changes: string[] = [];
+      
       if (hpChange < 0) {
-        statChangeContent = `${character.name} took ${Math.abs(hpChange)} damage! (${updatedPowerSheet.hp}/${updatedPowerSheet.maxHp} HP)`;
+        changes.push(`💔 Took ${Math.abs(hpChange)} damage (${updatedPowerSheet.hp}/${updatedPowerSheet.maxHp} HP)`);
       } else if (hpChange > 0) {
-        statChangeContent = `${character.name} healed ${hpChange} HP! (${updatedPowerSheet.hp}/${updatedPowerSheet.maxHp} HP)`;
-      } else {
-        statChangeContent = `${character.name}'s stats updated`;
+        changes.push(`💚 Healed ${hpChange} HP (${updatedPowerSheet.hp}/${updatedPowerSheet.maxHp} HP)`);
       }
+      
+      if (levelChange > 0) {
+        changes.push(`⬆️ Level UP! Now level ${updatedPowerSheet.level}`);
+      }
+      
+      // Check for attribute changes
+      if (statChanges?.attributes) {
+        const attrChanges = Object.entries(statChanges.attributes)
+          .map(([attr, value]) => `${attr} ${value > 0 ? '+' : ''}${value}`)
+          .join(', ');
+        if (attrChanges) {
+          changes.push(`📊 ${attrChanges}`);
+        }
+      }
+      
+      // Check for new statuses
+      if (statChanges?.statuses && statChanges.statuses.length > 0) {
+        const statusNames = statChanges.statuses.map((s: any) => s.name).join(', ');
+        changes.push(`✨ Status: ${statusNames}`);
+      }
+      
+      // Check for new perks
+      if (statChanges?.newPerks && statChanges.newPerks.length > 0) {
+        const perkNames = statChanges.newPerks.map((p: any) => p.name).join(', ');
+        changes.push(`🎁 New Perk: ${perkNames}`);
+      }
+      
+      const statChangeContent = changes.length > 0 
+        ? `${character.name}: ${changes.join(' | ')}`
+        : `${character.name}'s stats updated`;
 
       // Create stat change event
       await prisma.gameEvent.create({

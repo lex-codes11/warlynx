@@ -429,7 +429,11 @@ Generate the next turn of the game:
    - Use short, impactful sentences
    - Focus on immediate action and consequences
    - Show, don't tell - use vivid imagery
-   - **SHOW HP CHANGES**: When damage/healing occurs, show before/after HP (e.g., "HP: 85% → 62%")
+   - **CRITICAL - HP DISPLAY**: ALWAYS show ACTUAL HP NUMBERS, NEVER percentages!
+     * ✅ CORRECT: "HP: 102/120 → 34/120" or "HP: 66/120 → 0/120"
+     * ❌ WRONG: "HP: 85% → 70%" or "HP: 55% → 40%"
+     * NEVER use percentage symbols (%) when showing HP
+     * ALWAYS use the format: currentHP/maxHP → newHP/maxHP
    - **SHOW IMPACT**: Describe how effective attacks were (e.g., "💥 IMPACT: Critical hit! Armor shattered.")
    - Continues naturally from recent events
    - Presents a situation for the active player (${activePlayer.character.name})
@@ -441,9 +445,11 @@ Generate the next turn of the game:
    "🔥 ${activePlayer.character.name} unleashes a devastating attack!
    
    💥 IMPACT RESULT:
-   Target HP: 85% → 62% - Direct hit! Armor cracked.
+   Target HP: 102/120 → 34/120 - Took 68 damage! Critical hit!
    
    The battlefield trembles as energy dissipates."
+   
+   ⚠️ REMINDER: Use ACTUAL HP NUMBERS (66/120), NOT percentages (55%)!
 
 2. Present EXACTLY 4 choices (A, B, C, D):
    - Keep choice descriptions SHORT (5-10 words max)
@@ -470,34 +476,69 @@ Generate the next turn of the game:
      * Don't just increase numbers - give them something FUN and POWERFUL
    - **CRITICAL**: Use the exact Character ID from the character list above, NOT the character name
    
-   **DAMAGE CALCULATION GUIDELINES**:
-   Calculate HP damage dynamically based on these factors:
+   **DAMAGE CALCULATION GUIDELINES** - FOLLOW THESE STRICTLY:
    
-   a) **Base Damage Range** (% of target's max HP):
+   ⚠️ **CRITICAL RULES**:
+   1. DO NOT use fixed damage values like -15 HP! Calculate based on percentages of maxHP!
+   2. In your narrative, ALWAYS show ACTUAL HP NUMBERS (66/120), NEVER percentages (55%)!
+   3. Format: "HP: 66/120 → 0/120" NOT "HP: 55% → 0%"
+   
+   **STEP-BY-STEP DAMAGE CALCULATION**:
+   
+   1. **Determine Base Damage** (as % of target's maxHP):
       - Weak/Glancing hit: 5-10% of maxHP
       - Normal hit: 10-20% of maxHP
       - Strong hit: 20-35% of maxHP
       - Critical/Devastating hit: 35-50% of maxHP
       - Ultimate/Finishing move: 50-80% of maxHP
    
-   b) **Attribute Modifiers** (adjust damage up/down by 20-40%):
-      - Attacker's relevant attribute (Strength for physical, Intelligence for magic, etc.)
-      - Defender's Endurance reduces damage
-      - High attribute (70+): +30-40% damage
-      - Medium attribute (40-69): Normal damage
-      - Low attribute (<40): -20-30% damage
+   2. **Apply Attribute Modifiers**:
+      - Check attacker's relevant attribute (Strength/Intelligence/etc.)
+      - Check defender's Endurance
+      - High attacker attribute (70+): Multiply damage by 1.3-1.4
+      - Low attacker attribute (<40): Multiply damage by 0.7-0.8
+      - High defender Endurance (70+): Multiply damage by 0.7-0.75
+      - Low defender Endurance (<40): Multiply damage by 1.2-1.3
    
-   c) **Weakness Exploitation** (CRITICAL):
-      - If attack directly exploits target's weakness: +50-100% damage (can be devastating!)
-      - Example: Water attack vs fire weakness, psychic attack vs low intelligence
-      - Weakness hits should feel IMPACTFUL and potentially game-changing
+   3. **Check for Weakness Exploitation** (MOST IMPORTANT):
+      - Does the attack exploit the target's listed weakness?
+      - If YES: Multiply damage by 1.5-2.0 (50-100% bonus!)
+      - Example: Water attack on fire-weak character = MASSIVE damage
+      - Example: Drowning attack on Charizard (fire type) = DEVASTATING
    
-   d) **Action Context**:
-      - Extreme/risky actions: Higher damage potential
-      - Desperate/all-out attacks: Maximum damage but may have consequences
-      - Cautious/defensive actions: Lower damage
-      - Environmental advantages: +20-30% damage
+   4. **Apply Action Context**:
+      - Surprise attack/defenseless target: +20-30%
+      - All-out desperate attack: +30-40%
+      - Environmental advantage: +20-30%
    
+   5. **Apply Difficulty Curve**:
+      - Easy: Multiply by 0.8
+      - Medium: No change
+      - Hard: Multiply by 1.2
+      - Brutal: Multiply by 1.4
+   
+   **EXAMPLE CALCULATION** (Blastoise drowning Charizard):
+   - Charizard maxHP: 120, Weakness: "Fire type (weak to water)"
+   - Blastoise Strength: 80 (high), Charizard Endurance: 45 (medium)
+   - Action: Drowning (water attack on fire-weak target, surprise attack)
+   
+   Step 1: Base = 25% of 120 = 30 HP (strong hit)
+   Step 2: High Strength = 30 × 1.35 = 40.5 HP
+   Step 3: WEAKNESS EXPLOIT (water vs fire) = 40.5 × 1.75 = 71 HP
+   Step 4: Surprise/defenseless = 71 × 1.25 = 89 HP
+   Step 5: Medium difficulty = 89 HP (no change)
+   
+   **FINAL DAMAGE: -89 HP** (NOT -15 HP!)
+   
+   This would take Charizard from 66 HP (55% of 120) to -23 HP (DEAD!)
+   
+   **REMEMBER**: 
+   - ALWAYS calculate as percentage of maxHP first
+   - ALWAYS check for weakness exploitation
+   - NEVER use fixed values like -15 HP
+   - Make damage feel appropriate to the action and character matchup
+   - In your narrative, show ACTUAL HP numbers (e.g., "HP: 66/120 → 0/120"), NOT percentages
+   - The hp value in statUpdates should be the ACTUAL damage number (e.g., -89), NOT a percentage
    e) **Difficulty Curve**:
       - Easy: Reduce damage by 20%
       - Medium: Normal damage
