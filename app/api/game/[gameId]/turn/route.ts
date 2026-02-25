@@ -138,6 +138,15 @@ export async function POST(
     const isActive = await isActivePlayer(gameId, userId);
 
     if (!isActive) {
+      // Log detailed info for debugging
+      const activePlayerId = game.turnOrder[game.currentTurnIndex];
+      console.log(`Turn validation failed:`, {
+        requestingUserId: userId,
+        activePlayerId,
+        currentTurnIndex: game.currentTurnIndex,
+        turnOrder: game.turnOrder,
+      });
+
       return NextResponse.json(
         {
           success: false,
@@ -436,6 +445,15 @@ export async function POST(
 
     // Advance to next turn
     const { game: updatedGame, activePlayer: nextActivePlayer } = await advanceTurn(gameId);
+
+    console.log(`Turn advanced:`, {
+      gameId,
+      previousTurnIndex: game.currentTurnIndex,
+      newTurnIndex: updatedGame.currentTurnIndex,
+      previousActivePlayer: userId,
+      newActivePlayer: nextActivePlayer.userId,
+      newActivePlayerName: nextActivePlayer.user.displayName,
+    });
 
     // Update turn record to completed
     await prisma.turn.update({

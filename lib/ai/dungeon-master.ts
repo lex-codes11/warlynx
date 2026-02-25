@@ -353,11 +353,21 @@ Generate the next turn of the game:
    - Use short, impactful sentences
    - Focus on immediate action and consequences
    - Show, don't tell - use vivid imagery
+   - **SHOW HP CHANGES**: When damage/healing occurs, show before/after HP (e.g., "HP: 85% → 62%")
+   - **SHOW IMPACT**: Describe how effective attacks were (e.g., "💥 IMPACT: Critical hit! Armor shattered.")
    - Continues naturally from recent events
    - Presents a situation for the active player (${activePlayer.character.name})
    - Matches the tone tags (${gameSettings.toneTags.join(', ')})
    - Respects the ${gameSettings.difficultyCurve} difficulty curve
-   - Use emojis sparingly for emphasis (🔥, ⚡, 💀, ✨, etc.)
+   - Use emojis for emphasis (🔥, ⚡, 💀, ✨, 💥, etc.)
+   
+   NARRATIVE FORMAT EXAMPLE:
+   "🔥 ${activePlayer.character.name} unleashes a devastating attack!
+   
+   💥 IMPACT RESULT:
+   Target HP: 85% → 62% - Direct hit! Armor cracked.
+   
+   The battlefield trembles as energy dissipates."
 
 2. Present EXACTLY 4 choices (A, B, C, D):
    - Keep choice descriptions SHORT (5-10 words max)

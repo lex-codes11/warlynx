@@ -76,6 +76,8 @@ export function EnhancedGameplayView({
       return;
     }
 
+    console.log('Setting up real-time subscriptions for game:', game.id);
+
     // Subscribe to typing indicators
     subscriptionManager.subscribeToSession({
       sessionId: game.id,
@@ -98,7 +100,10 @@ export function EnhancedGameplayView({
     // Subscribe to game events (turn resolved, stats updated, etc.)
     const gameChannel = subscribeToGame(supabaseClient, game.id, {
       onTurnResolved: async (response: any) => {
-        console.log('Turn resolved, refreshing game state');
+        console.log('Turn resolved event received:', {
+          turnId: response.turnId,
+          nextActivePlayer: response.nextActivePlayer,
+        });
         // Use Next.js router to refresh server data without full page reload
         router.refresh();
         setIsSubmittingMove(false);
@@ -106,26 +111,27 @@ export function EnhancedGameplayView({
         setIsLoadingMoves(false);
       },
       onStatsUpdated: (update: any) => {
-        console.log('Stats updated, refreshing');
+        console.log('Stats updated event received:', update);
         // Stats will be updated via router.refresh()
         router.refresh();
       },
       onCharacterUpdated: (character: any) => {
-        console.log('Character updated, refreshing');
+        console.log('Character updated event received:', character);
         // Character will be updated via router.refresh()
         router.refresh();
       },
       onGameUpdated: (gameUpdate: any) => {
-        console.log('Game updated, refreshing');
+        console.log('Game updated event received:', gameUpdate);
         router.refresh();
       },
     });
 
     return () => {
+      console.log('Cleaning up real-time subscriptions');
       subscriptionManager.unsubscribe();
       gameChannel.unsubscribe();
     };
-  }, [game.id, userId]);
+  }, [game.id, userId, router, subscriptionManager]);
 
   // Load AI-generated moves when it's the player's turn
   useEffect(() => {

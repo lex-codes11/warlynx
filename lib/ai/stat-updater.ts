@@ -365,39 +365,79 @@ export async function processStatUpdates(
 ): Promise<Map<string, PowerSheet>> {
   const updatedPowerSheets = new Map<string, PowerSheet>();
 
+  // First, validate all character IDs exist
+  const game = await prisma.game.findUnique({
+    where: { id: gameId },
+    include: {
+      players: {
+        include: {
+          character: {
+            select: { id: true },
+          },
+        },
+      },
+    },
+  });
+
+  if (!game) {
+    throw new Error('GAME_NOT_FOUND');
+  }
+
+  const validCharacterIds = new Set(
+    game.players
+      .filter(p => p.character)
+      .map(p => p.character!.id)
+  );
+
   for (const statUpdate of statUpdates) {
-    const updatedPowerSheet = await applyStatUpdates(
-      statUpdate.characterId,
-      statUpdate,
-      gameId,
-      turnId
-    );
+    // Skip stat updates for non-existent characters
+    if (!validCharacterIds.has(statUpdate.characterId)) {
+      console.warn(
+        `Skipping stat update for non-existent character: ${statUpdate.characterId}`
+      );
+      continue;
+    }
 
-    updatedPowerSheets.set(statUpdate.characterId, updatedPowerSheet);
+    try {
+      const updatedPowerSheet = await applyStatUpdates(
+        statUpdate.characterId,
+        statUpdate,
+        gameId,
+        turnId
+      );
 
-    // Check if character should level up (if not already leveling up in this update)
-    if (!statUpdate.changes.level) {
-      const shouldLevel = await shouldLevelUp(statUpdate.characterId, gameId);
-      if (shouldLevel) {
-        const character = await prisma.character.findUnique({
-          where: { id: statUpdate.characterId },
-          select: { powerSheet: true },
-        });
+      updatedPowerSheets.set(statUpdate.characterId, updatedPowerSheet);
 
-        if (character) {
-          const currentPowerSheet = character.powerSheet as unknown as PowerSheet;
-          const newLevel = currentPowerSheet.level + 1;
+      // Check if character should level up (if not already leveling up in this update)
+      if (!statUpdate.changes.level) {
+        const shouldLevel = await shouldLevelUp(statUpdate.characterId, gameId);
+        if (shouldLevel) {
+          const character = await prisma.character.findUnique({
+            where: { id: statUpdate.characterId },
+            select: { powerSheet: true },
+          });
 
-          const leveledUpPowerSheet = await handleLevelUp(
-            statUpdate.characterId,
-            newLevel,
-            gameId,
-            turnId
-          );
+          if (character) {
+            const currentPowerSheet = character.powerSheet as unknown as PowerSheet;
+            const newLevel = currentPowerSheet.level + 1;
 
-          updatedPowerSheets.set(statUpdate.characterId, leveledUpPowerSheet);
+            const leveledUpPowerSheet = await handleLevelUp(
+              statUpdate.characterId,
+              newLevel,
+              gameId,
+              turnId
+            );
+
+            updatedPowerSheets.set(statUpdate.characterId, leveledUpPowerSheet);
+          }
         }
       }
+    } catch (error) {
+      // Log error but continue processing other stat updates
+      console.error(
+        `Failed to process stat update for character ${statUpdate.characterId}:`,
+        error
+      );
     }
   }
 
