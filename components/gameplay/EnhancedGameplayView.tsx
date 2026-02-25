@@ -248,32 +248,8 @@ export function EnhancedGameplayView({
           </div>
 
           <div className="grid lg:grid-cols-12 gap-4">
-            {/* Left Column: Character Info */}
+            {/* Left Column: Stats and Abilities */}
             <div className="lg:col-span-3 space-y-4">
-              {/* Power Cards (Requirement 10.2) */}
-              {characters.map((char: any) => {
-                const charPlayer = players.find((p) => p.characterId === char.id);
-                const isActive = charPlayer?.userId === currentPlayerId;
-                
-                return (
-                  <ErrorBoundary
-                    key={char.id}
-                    fallback={
-                      <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
-                        <p className="text-red-400 text-center text-sm">
-                          Unable to load character card
-                        </p>
-                      </div>
-                    }
-                  >
-                    <PowerCard
-                      character={char}
-                      isActive={isActive}
-                    />
-                  </ErrorBoundary>
-                );
-              })}
-
               {/* Stats Display */}
               <StatsDisplay characters={characters} />
 
@@ -285,7 +261,7 @@ export function EnhancedGameplayView({
             </div>
 
             {/* Middle Column: Story and Actions */}
-            <div className="lg:col-span-9 space-y-4">
+            <div className="lg:col-span-6 space-y-4">
               {/* Battle Feed (Requirement 10.1) */}
               <ErrorBoundary
                 fallback={
@@ -320,6 +296,33 @@ export function EnhancedGameplayView({
 
               {/* Typing Indicator */}
               <TypingIndicator typingPlayers={typingPlayers} />
+            </div>
+
+            {/* Right Column: Character Cards with Images */}
+            <div className="lg:col-span-3 space-y-4">
+              {/* Power Cards (Requirement 10.2) */}
+              {characters.map((char: any) => {
+                const charPlayer = players.find((p) => p.characterId === char.id);
+                const isActive = charPlayer?.userId === currentPlayerId;
+                
+                return (
+                  <ErrorBoundary
+                    key={char.id}
+                    fallback={
+                      <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
+                        <p className="text-red-400 text-center text-sm">
+                          Unable to load character card
+                        </p>
+                      </div>
+                    }
+                  >
+                    <PowerCard
+                      character={char}
+                      isActive={isActive}
+                    />
+                  </ErrorBoundary>
+                );
+              })}
             </div>
           </div>
         </div>
