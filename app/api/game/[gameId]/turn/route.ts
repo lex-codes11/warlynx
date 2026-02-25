@@ -230,20 +230,17 @@ export async function POST(
           { status: 409 }
         );
       } else if (existingTurn.phase === 'completed') {
-        // Turn completed but game state not updated yet - this is a race condition
-        // The other player's turn just completed, refresh to get new state
-        console.log(`Turn ${existingTurn.turnIndex} already completed, client needs to refresh`);
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: 'TURN_ALREADY_COMPLETED',
-              message: 'This turn has already been completed. Please refresh the page.',
-              retryable: false,
-            },
-          },
-          { status: 409 }
-        );
+        // Turn completed but game state shows this turn index - database inconsistency
+        // This happens when turn completed but game.currentTurnIndex wasn't updated
+        console.log(`Turn ${existingTurn.turnIndex} already completed but game still at this index`);
+        console.log(`Deleting completed turn to allow new submission`);
+        
+        // Delete the completed turn to allow a new one
+        await prisma.turn.delete({
+          where: { id: existingTurn.id },
+        });
+        
+        console.log('Completed turn deleted, proceeding with new turn');
       } else {
         // Turn exists but not in resolving or completed state - shouldn't happen
         return NextResponse.json(
