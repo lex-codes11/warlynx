@@ -248,20 +248,11 @@ export function EnhancedGameplayView({
           </div>
 
           <div className="grid lg:grid-cols-12 gap-4">
-            {/* Left Column: Stats and Abilities */}
-            <div className="lg:col-span-3 space-y-4">
-              {/* Stats Display */}
-              <StatsDisplay characters={characters} />
-
-              {/* Ability Summary */}
-              <AbilitySummaryContainer 
-                gameId={game.id}
-                initialCharacters={characters}
-              />
-            </div>
-
-            {/* Middle Column: Story and Actions */}
-            <div className="lg:col-span-6 space-y-4">
+            {/* Mobile: Chat first, then stats/abilities, then character cards */}
+            {/* Desktop: Stats left, chat middle, character cards right */}
+            
+            {/* Middle Column: Story and Actions - Shows first on mobile */}
+            <div className="lg:col-span-6 lg:order-2 order-1 space-y-4">
               {/* Battle Feed (Requirement 10.1) */}
               <ErrorBoundary
                 fallback={
@@ -298,8 +289,20 @@ export function EnhancedGameplayView({
               <TypingIndicator typingPlayers={typingPlayers} />
             </div>
 
-            {/* Right Column: Character Cards with Images */}
-            <div className="lg:col-span-3 space-y-4">
+            {/* Left Column: Stats and Abilities - Shows second on mobile */}
+            <div className="lg:col-span-3 lg:order-1 order-2 space-y-4">
+              {/* Stats Display */}
+              <StatsDisplay characters={characters} />
+
+              {/* Ability Summary */}
+              <AbilitySummaryContainer 
+                gameId={game.id}
+                initialCharacters={characters}
+              />
+            </div>
+
+            {/* Right Column: Character Cards with Images - Shows third on mobile */}
+            <div className="lg:col-span-3 lg:order-3 order-3 space-y-4">
               {/* Power Cards (Requirement 10.2) */}
               {characters.map((char: any) => {
                 const charPlayer = players.find((p) => p.characterId === char.id);

@@ -331,6 +331,20 @@ export async function POST(
 
       const oldPowerSheet = character.powerSheet as unknown as PowerSheet;
 
+      // Calculate HP change for better messaging
+      const hpChange = updatedPowerSheet.hp - oldPowerSheet.hp;
+      const statChanges = dmResponse.statUpdates.find(u => u.characterId === characterId)?.changes;
+      
+      // Create detailed stat change message
+      let statChangeContent = '';
+      if (hpChange < 0) {
+        statChangeContent = `${character.name} took ${Math.abs(hpChange)} damage! (${updatedPowerSheet.hp}/${updatedPowerSheet.maxHp} HP)`;
+      } else if (hpChange > 0) {
+        statChangeContent = `${character.name} healed ${hpChange} HP! (${updatedPowerSheet.hp}/${updatedPowerSheet.maxHp} HP)`;
+      } else {
+        statChangeContent = `${character.name}'s stats updated`;
+      }
+
       // Create stat change event
       await prisma.gameEvent.create({
         data: {
@@ -338,9 +352,12 @@ export async function POST(
           turnId: turn.id,
           characterId,
           type: 'stat_change',
-          content: `${character.name}'s stats updated`,
+          content: statChangeContent,
           metadata: {
-            changes: dmResponse.statUpdates.find(u => u.characterId === characterId)?.changes,
+            changes: statChanges,
+            hpChange,
+            oldHp: oldPowerSheet.hp,
+            newHp: updatedPowerSheet.hp,
           } as any,
         },
       });

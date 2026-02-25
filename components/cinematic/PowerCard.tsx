@@ -198,12 +198,12 @@ export function PowerCard({ character, isActive, onDamage }: PowerCardProps) {
       whileHover={shouldAnimate ? "hover" : undefined}
     >
       {/* Character Portrait - Requirement 3.1 */}
-      <div className="relative aspect-[3/4] overflow-hidden">
+      <div className="relative aspect-[2/3] overflow-hidden">
         {safeCharacter.imageUrl ? (
           <img
             src={safeCharacter.imageUrl}
             alt={safeCharacter.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-top"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
