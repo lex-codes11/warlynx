@@ -299,6 +299,7 @@ export async function POST(
         narrativeLength: dmResponse.narrative?.length || 0,
         choicesCount: dmResponse.choices?.length || 0,
         statUpdatesCount: dmResponse.statUpdates?.length || 0,
+        error: dmResponse.error || null,
         statUpdates: dmResponse.statUpdates?.map(u => ({
           characterId: u.characterId,
           changes: u.changes,
@@ -314,6 +315,8 @@ export async function POST(
             completedAt: new Date(),
           },
         });
+
+        console.error('DM generation failed:', dmResponse.error);
 
         return NextResponse.json(
           {

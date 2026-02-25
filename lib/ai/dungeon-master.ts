@@ -840,9 +840,19 @@ async function attemptTurnNarrativeGeneration(
   }
 
   // Parse and validate response
-  const parsedResponse = JSON.parse(content) as AITurnResponse;
+  let parsedResponse: AITurnResponse;
+  try {
+    parsedResponse = JSON.parse(content) as AITurnResponse;
+  } catch (parseError) {
+    console.error('Failed to parse AI response as JSON:', content);
+    throw new Error(`Invalid JSON response from AI: ${parseError}`);
+  }
   
   console.log('Raw AI response before validation:', {
+    hasNarrative: !!parsedResponse.narrative,
+    narrativeLength: parsedResponse.narrative?.length || 0,
+    hasChoices: !!parsedResponse.choices,
+    choicesCount: parsedResponse.choices?.length || 0,
     statUpdatesCount: parsedResponse.statUpdates?.length || 0,
     statUpdates: parsedResponse.statUpdates?.map(u => ({
       characterId: u.characterId,
