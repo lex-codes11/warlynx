@@ -378,6 +378,14 @@ export async function POST(
       turn.id
     );
 
+    console.log(`Stat updates processed:`, {
+      requestedUpdates: dmResponse.statUpdates.map(u => ({
+        characterId: u.characterId,
+        changes: u.changes,
+      })),
+      successfulUpdates: Array.from(updatedPowerSheets.keys()),
+    });
+
     // Store stat change events and check for deaths
     for (const [characterId, updatedPowerSheet] of Array.from(updatedPowerSheets.entries())) {
       const character = await prisma.character.findUnique({
