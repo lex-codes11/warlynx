@@ -46,7 +46,8 @@ export function EnhancedGameplayView({
   onMoveSubmit,
 }: EnhancedGameplayViewProps) {
   const router = useRouter();
-  const [game, setGame] = useState(initialGame);
+  // Use initialGame directly instead of state to avoid re-render loops
+  const game = initialGame;
   const [aiMoves, setAiMoves] = useState<MoveOptions>({
     A: 'Assess the situation carefully',
     B: 'Take a defensive stance',
@@ -131,7 +132,8 @@ export function EnhancedGameplayView({
       subscriptionManager.unsubscribe();
       gameChannel.unsubscribe();
     };
-  }, [game.id, userId, router, subscriptionManager]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.id, userId]);
 
   // Load AI-generated moves when it's the player's turn
   useEffect(() => {
@@ -140,7 +142,8 @@ export function EnhancedGameplayView({
     if (isPlayerTurn && !isLoadingMoves && !isSubmittingMove) {
       loadAIMoves();
     }
-  }, [game.currentTurnIndex, userId, isLoadingMoves, isSubmittingMove]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [game.currentTurnIndex, userId]);
 
   const loadAIMoves = async () => {
     setIsLoadingMoves(true);
