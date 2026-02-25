@@ -46,8 +46,10 @@ export async function updateCharacterDescription(
     },
   });
 
-  // Broadcast update to all clients in the game
-  await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  // Broadcast update to all clients in the game (only if character is in a game)
+  if (updatedCharacter.gameId) {
+    await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  }
 
   return toCharacter(updatedCharacter);
 }
@@ -77,8 +79,10 @@ export async function updateCharacterAbilities(
     },
   });
 
-  // Broadcast update to all clients in the game
-  await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  // Broadcast update to all clients in the game (only if character is in a game)
+  if (updatedCharacter.gameId) {
+    await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  }
 
   return toCharacter(updatedCharacter);
 }
@@ -103,8 +107,10 @@ export async function updateCharacterWeakness(
     },
   });
 
-  // Broadcast update to all clients in the game
-  await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  // Broadcast update to all clients in the game (only if character is in a game)
+  if (updatedCharacter.gameId) {
+    await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  }
 
   return toCharacter(updatedCharacter);
 }
@@ -134,8 +140,10 @@ export async function updateCharacterName(
     },
   });
 
-  // Broadcast update to all clients in the game
-  await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  // Broadcast update to all clients in the game (only if character is in a game)
+  if (updatedCharacter.gameId) {
+    await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  }
 
   return toCharacter(updatedCharacter);
 }
@@ -165,8 +173,10 @@ export async function updateCharacterPowerSheet(
     },
   });
 
-  // Broadcast update to all clients in the game
-  await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  // Broadcast update to all clients in the game (only if character is in a game)
+  if (updatedCharacter.gameId) {
+    await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  }
 
   return toCharacter(updatedCharacter);
 }
@@ -240,8 +250,10 @@ export async function updateCharacterAttributes(
     data: updateData,
   });
 
-  // Broadcast update to all clients in the game
-  await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  // Broadcast update to all clients in the game (only if character is in a game)
+  if (updatedCharacter.gameId) {
+    await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  }
 
   return toCharacter(updatedCharacter);
 }
@@ -266,8 +278,10 @@ export async function updateCharacterReadyState(
     } as any, // Type assertion needed until Prisma client is regenerated with isReady field
   });
 
-  // Broadcast update to all clients in the game
-  await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  // Broadcast update to all clients in the game (only if character is in a game)
+  if (updatedCharacter.gameId) {
+    await broadcastCharacterUpdate(updatedCharacter.gameId, updatedCharacter);
+  }
 
   return toCharacter(updatedCharacter);
 }

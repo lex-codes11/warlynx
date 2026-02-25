@@ -117,7 +117,7 @@ model GamePlayer {
 
 model Character {
   id                String   @id @default(cuid())
-  gameId            String
+  gameId            String?  // Nullable: null for library characters, set for game characters
   userId            String
   name              String
   fusionIngredients String
@@ -135,15 +135,15 @@ model Character {
   updatedAt         DateTime @updatedAt
 
   // Relations
-  game           Game            @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game           Game?           @relation(fields: [gameId], references: [id], onDelete: Cascade)
   user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   gamePlayer     GamePlayer?
   statsSnapshots StatsSnapshot[]
   events         GameEvent[]
 
-  @@unique([gameId, userId])
   @@index([gameId])
   @@index([userId])
+  @@index([gameId, userId])
 }
 
 model Turn {

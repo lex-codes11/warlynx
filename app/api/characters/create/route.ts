@@ -189,12 +189,10 @@ export async function POST(request: NextRequest) {
     }
 
     // **Validates: Requirement 4.1** - Enforce one character per player per game
-    const existingCharacter = await prisma.character.findUnique({
+    const existingCharacter = await prisma.character.findFirst({
       where: {
-        gameId_userId: {
-          gameId: data.gameId,
-          userId,
-        },
+        gameId: data.gameId,
+        userId,
       },
     });
 

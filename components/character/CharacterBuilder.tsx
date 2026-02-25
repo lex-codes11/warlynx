@@ -25,6 +25,8 @@ export function CharacterBuilder({
   const [error, setError] = useState<string | null>(null);
   const [createdCharacter, setCreatedCharacter] = useState<any>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [isSavingToLibrary, setIsSavingToLibrary] = useState(false);
+  const [savedToLibrary, setSavedToLibrary] = useState(false);
 
   const handleInputChange = (
     field: keyof CharacterFormData,
@@ -104,6 +106,43 @@ export function CharacterBuilder({
     }
   };
 
+  const handleSaveToLibrary = async () => {
+    if (!createdCharacter) return;
+
+    setIsSavingToLibrary(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/characters/library", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: createdCharacter.name,
+          fusionIngredients: createdCharacter.fusionIngredients,
+          description: createdCharacter.description,
+          abilities: createdCharacter.abilities,
+          weakness: createdCharacter.weakness,
+          imageUrl: createdCharacter.imageUrl,
+          imagePrompt: createdCharacter.imagePrompt,
+          powerSheet: createdCharacter.powerSheet,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setError(data.error || "Failed to save character to library");
+        return;
+      }
+
+      setSavedToLibrary(true);
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSavingToLibrary(false);
+    }
+  };
+
   // Show success view with character preview
   if (createdCharacter) {
     return (
@@ -128,18 +167,33 @@ export function CharacterBuilder({
               )}
             </div>
 
-            <button
-              onClick={handleRegenerateImage}
-              disabled={isRegenerating}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              {isRegenerating ? "Regenerating..." : "Regenerate Image"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleRegenerateImage}
+                disabled={isRegenerating || isSavingToLibrary}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {isRegenerating ? "Regenerating..." : "Regenerate Image"}
+              </button>
+              <button
+                onClick={handleSaveToLibrary}
+                disabled={isRegenerating || isSavingToLibrary || savedToLibrary}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              >
+                {isSavingToLibrary ? "Saving..." : savedToLibrary ? "✓ Saved to Library" : "Save to Library"}
+              </button>
+            </div>
           </div>
 
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {savedToLibrary && (
+            <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-600">Character saved to your library! You can reuse it in future games.</p>
             </div>
           )}
 

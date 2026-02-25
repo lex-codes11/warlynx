@@ -72,7 +72,7 @@ export async function GET(
     // Verify user has access to this character's stats
     // User must be either the character owner or a player in the same game
     const isOwner = character.userId === userId;
-    const isGamePlayer = character.game.players.length > 0;
+    const isGamePlayer = character.game ? character.game.players.length > 0 : false;
 
     if (!isOwner && !isGamePlayer) {
       return NextResponse.json(

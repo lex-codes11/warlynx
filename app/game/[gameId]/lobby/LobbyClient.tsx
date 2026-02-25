@@ -42,6 +42,7 @@ export default function LobbyClient({
   const router = useRouter();
   const [game, setGame] = useState(initialGame);
   const [starting, setStarting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -72,6 +73,32 @@ export default function LobbyClient({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start game");
       setStarting(false);
+    }
+  };
+
+  const handleDeleteGame = async () => {
+    if (!confirm("Are you sure you want to delete this game? This action cannot be undone.")) {
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/games/${game.id}/delete`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error?.message || "Failed to delete game");
+      }
+
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete game");
+      setDeleting(false);
     }
   };
 
@@ -208,7 +235,7 @@ export default function LobbyClient({
         {isHost && (
           <div className="bg-gray-900/40 backdrop-blur-md border border-gray-700 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-gray-200 mb-4">
-              Start Game
+              Host Controls
             </h2>
             {!allPlayersHaveCharacters && (
               <p className="text-sm text-amber-400 mb-4">
@@ -220,13 +247,22 @@ export default function LobbyClient({
                 ⚠️ At least 2 players are required to start
               </p>
             )}
-            <button
-              onClick={handleStartGame}
-              disabled={!canStart || starting}
-              className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-green-500/50"
-            >
-              {starting ? "Starting..." : "Start Game"}
-            </button>
+            <div className="space-y-3">
+              <button
+                onClick={handleStartGame}
+                disabled={!canStart || starting || deleting}
+                className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-green-500/50"
+              >
+                {starting ? "Starting..." : "Start Game"}
+              </button>
+              <button
+                onClick={handleDeleteGame}
+                disabled={starting || deleting}
+                className="w-full py-2 px-4 bg-red-600 hover:bg-red-700 text-white font-medium rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-red-500/50"
+              >
+                {deleting ? "Deleting..." : "Delete Game"}
+              </button>
+            </div>
           </div>
         )}
 

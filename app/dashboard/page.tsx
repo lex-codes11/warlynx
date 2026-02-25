@@ -74,12 +74,20 @@ export default async function DashboardPage() {
                 Welcome, {session.user.displayName || session.user.email}!
               </h1>
             </div>
-            <Link
-              href="/game/create"
-              className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-md transition-all hover:shadow-lg hover:shadow-cyan-500/50"
-            >
-              Create New Game
-            </Link>
+            <div className="flex gap-3">
+              <Link
+                href="/characters/library"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-md transition-all hover:shadow-lg hover:shadow-purple-500/50"
+              >
+                Character Library
+              </Link>
+              <Link
+                href="/game/create"
+                className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-md transition-all hover:shadow-lg hover:shadow-cyan-500/50"
+              >
+                Create New Game
+              </Link>
+            </div>
           </div>
 
           {games.length === 0 ? (
