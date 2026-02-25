@@ -25,7 +25,7 @@ export function resetOpenAIClient(): void {
 }
 
 // Configuration
-const GENERATION_TIMEOUT_MS = 3000;
+const GENERATION_TIMEOUT_MS = 15000; // Increased from 3s to 15s
 const FALLBACK_MOVES: MoveOptions = {
   A: 'Assess the situation carefully',
   B: 'Take a defensive stance',

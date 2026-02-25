@@ -229,74 +229,75 @@ export async function POST(
       },
     });
 
-    // Process action through DM
-    const dmResponse = await generateTurnNarrative(
-      gameId,
-      isStandardChoice ? undefined : action
-    );
-
-    if (!dmResponse.success) {
-      // Update turn to failed state
-      await prisma.turn.update({
-        where: { id: turn.id },
-        data: {
-          phase: 'completed',
-          completedAt: new Date(),
-        },
-      });
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'DM_GENERATION_FAILED',
-            message: dmResponse.error || 'Failed to generate turn narrative',
-            retryable: true,
-          },
-        },
-        { status: 500 }
-      );
-    }
-
-    // If DM returned a validation error, return it
-    if (dmResponse.validationError) {
-      await prisma.turn.update({
-        where: { id: turn.id },
-        data: {
-          phase: 'completed',
-          completedAt: new Date(),
-        },
-      });
-
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'INVALID_ACTION',
-            message: dmResponse.validationError,
-            retryable: true,
-          },
-        },
-        { status: 400 }
-      );
-    }
-
-    // Store action event
-    await prisma.gameEvent.create({
-      data: {
+    try {
+      // Process action through DM
+      const dmResponse = await generateTurnNarrative(
         gameId,
-        turnId: turn.id,
-        characterId: activePlayer.character.id,
-        type: 'action',
-        content: `${activePlayer.character.name} chose: ${action}`,
-        metadata: {
-          action,
-          playerId: userId,
-        },
-      },
-    });
+        isStandardChoice ? undefined : action
+      );
 
-    // Store narrative event
+      if (!dmResponse.success) {
+        // Update turn to failed state
+        await prisma.turn.update({
+          where: { id: turn.id },
+          data: {
+            phase: 'completed',
+            completedAt: new Date(),
+          },
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'DM_GENERATION_FAILED',
+              message: dmResponse.error || 'Failed to generate turn narrative',
+              retryable: true,
+            },
+          },
+          { status: 500 }
+        );
+      }
+
+      // If DM returned a validation error, return it
+      if (dmResponse.validationError) {
+        await prisma.turn.update({
+          where: { id: turn.id },
+          data: {
+            phase: 'completed',
+            completedAt: new Date(),
+          },
+        });
+
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'INVALID_ACTION',
+              message: dmResponse.validationError,
+              retryable: true,
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      // Store action event
+      await prisma.gameEvent.create({
+        data: {
+          gameId,
+          turnId: turn.id,
+          characterId: activePlayer.character.id,
+          type: 'action',
+          content: `${activePlayer.character.name} chose: ${action}`,
+          metadata: {
+            action,
+            playerId: userId,
+          },
+        },
+      });
+
+      // Store narrative event
     await prisma.gameEvent.create({
       data: {
         gameId,
@@ -450,33 +451,51 @@ export async function POST(
       },
     });
 
-    // Return success response
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          turnId: turn.id,
-          narrative: dmResponse.narrative,
-          choices: dmResponse.choices,
-          statUpdates: dmResponse.statUpdates,
-          nextActivePlayer: {
-            userId: nextActivePlayer.userId,
-            displayName: nextActivePlayer.user.displayName,
-            character: nextActivePlayer.character
-              ? {
-                  id: nextActivePlayer.character.id,
-                  name: nextActivePlayer.character.name,
-                  imageUrl: nextActivePlayer.character.imageUrl,
-                }
-              : null,
+      // Return success response
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            turnId: turn.id,
+            narrative: dmResponse.narrative,
+            choices: dmResponse.choices,
+            statUpdates: dmResponse.statUpdates,
+            nextActivePlayer: {
+              userId: nextActivePlayer.userId,
+              displayName: nextActivePlayer.user.displayName,
+              character: nextActivePlayer.character
+                ? {
+                    id: nextActivePlayer.character.id,
+                    name: nextActivePlayer.character.name,
+                    imageUrl: nextActivePlayer.character.imageUrl,
+                  }
+                : null,
+            },
           },
         },
-      },
-      { 
-        status: 200,
-        headers: getRateLimitHeaders(rateLimit),
+        { 
+          status: 200,
+          headers: getRateLimitHeaders(rateLimit),
+        }
+      );
+    } catch (turnError) {
+      // If anything fails during turn processing, clean up the turn record
+      console.error('Turn processing failed, cleaning up:', turnError);
+      
+      try {
+        await prisma.turn.update({
+          where: { id: turn.id },
+          data: {
+            phase: 'completed',
+            completedAt: new Date(),
+          },
+        });
+      } catch (cleanupError) {
+        console.error('Failed to cleanup turn:', cleanupError);
       }
-    );
+      
+      throw turnError; // Re-throw to be caught by outer catch
+    }
   } catch (error) {
     console.error('Turn processing error:', error);
 

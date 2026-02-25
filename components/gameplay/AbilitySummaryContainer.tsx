@@ -47,10 +47,10 @@ export function AbilitySummaryContainer({
 
   return (
     <div className="relative">
-      {/* Optional: Connection indicator */}
+      {/* Optional: Connection indicator - only show if disconnected for more than 3 seconds */}
       {!isConnected && (
-        <div className="absolute top-0 right-0 px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded">
-          Reconnecting...
+        <div className="absolute top-2 right-2 z-10 px-2 py-1 text-xs bg-gray-800/80 text-gray-400 rounded border border-gray-700/50">
+          •••
         </div>
       )}
       
