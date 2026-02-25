@@ -188,7 +188,7 @@ export async function POST(
     // Custom actions are passed to the DM for narrative validation
     const isStandardChoice = ['A', 'B', 'C', 'D'].includes(action.toUpperCase());
 
-    // Check if a turn already exists for this turn index (prevent duplicate creation)
+    // Check if a turn already exists for this turn index
     const existingTurn = await prisma.turn.findFirst({
       where: {
         gameId,
@@ -197,17 +197,26 @@ export async function POST(
     });
 
     if (existingTurn) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: 'TURN_ALREADY_PROCESSING',
-            message: 'A turn is already being processed. Please wait.',
-            retryable: false,
+      // If turn is stuck in resolving for more than 2 minutes, allow retry
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+      if (existingTurn.phase === 'resolving' && existingTurn.startedAt < twoMinutesAgo) {
+        // Delete stuck turn and allow retry
+        await prisma.turn.delete({
+          where: { id: existingTurn.id },
+        });
+      } else {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'TURN_ALREADY_PROCESSING',
+              message: 'A turn is already being processed. Please wait.',
+              retryable: false,
+            },
           },
-        },
-        { status: 409 }
-      );
+          { status: 409 }
+        );
+      }
     }
 
     // Create turn record

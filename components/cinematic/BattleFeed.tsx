@@ -137,7 +137,7 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
   return (
     <div 
       ref={feedRef}
-      className="w-full space-y-4 max-h-[600px] overflow-y-auto scroll-smooth"
+      className="w-full space-y-3 max-h-[600px] overflow-y-auto scroll-smooth"
       style={{
         scrollBehavior: 'smooth',
         scrollbarWidth: 'thin',
@@ -146,12 +146,12 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
     >
       {safeEvents.length === 0 ? (
         <motion.div 
-          className={`${GLASS_PANEL_CLASSES.glowCyan} p-8 text-center`}
+          className={`${GLASS_PANEL_CLASSES.glowCyan} p-6 text-center`}
           variants={prefersReducedMotion ? undefined : fadeIn}
           initial={prefersReducedMotion ? false : "initial"}
           animate={prefersReducedMotion ? false : "animate"}
         >
-          <p className="text-gray-400 text-lg">Awaiting battle events...</p>
+          <p className="text-gray-400 text-sm">Awaiting game events...</p>
         </motion.div>
       ) : (
         <AnimatePresence mode="popLayout">
@@ -163,8 +163,7 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
               animate={prefersReducedMotion ? false : "animate"}
               exit={prefersReducedMotion ? undefined : "exit"}
               layout={!prefersReducedMotion}
-              className={`${GLASS_PANEL_CLASSES.glowCyan} w-full`}
-              style={{ padding: CINEMATIC_SPACING.lg }}
+              className={`${GLASS_PANEL_CLASSES.glowCyan} w-full p-3`}
             >
               <EventContent event={event} onEventRead={onEventRead} simplifyEffects={simplifyEffects} />
             </motion.div>
@@ -180,6 +179,7 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
  * 
  * Renders the content of a single game event with appropriate styling and animations.
  * Handles character attribution, event type icons, ability highlights, and timestamps.
+ * Includes inline TTS play button for each message.
  * 
  * @param props - Component props
  * @param props.event - The game event to render
@@ -199,6 +199,7 @@ function EventContent({
   simplifyEffects?: boolean;
 }) {
   const prefersReducedMotion = useReducedMotion();
+  const [isPlaying, setIsPlaying] = React.useState(false);
   
   React.useEffect(() => {
     if (onEventRead) {
@@ -206,69 +207,98 @@ function EventContent({
     }
   }, [event.id, onEventRead]);
 
-  return (
-    <div className="space-y-3">
-      {/* Character attribution */}
-      {event.character && (
-        <div className="flex items-center gap-3 mb-4">
-          {event.character.imageUrl && (
-            <img
-              src={event.character.imageUrl}
-              alt={event.character.name}
-              className="w-10 h-10 rounded-full border-2 border-cyan-500/50"
-            />
-          )}
-          <span className="text-cyan-400 font-semibold text-sm uppercase tracking-wide">
-            {event.character.name}
-          </span>
-        </div>
-      )}
+  const handlePlayTTS = () => {
+    if ('speechSynthesis' in window) {
+      if (isPlaying) {
+        window.speechSynthesis.cancel();
+        setIsPlaying(false);
+      } else {
+        const utterance = new SpeechSynthesisUtterance(event.content);
+        utterance.onend = () => setIsPlaying(false);
+        utterance.onerror = () => setIsPlaying(false);
+        window.speechSynthesis.speak(utterance);
+        setIsPlaying(true);
+      }
+    }
+  };
 
-      {/* Event type indicator */}
-      <div className="flex items-center gap-2 mb-2">
-        <EventTypeIcon type={event.type} />
-        <span className="text-xs text-gray-500 uppercase tracking-wider">
-          {event.type}
-        </span>
+  return (
+    <div className="space-y-2">
+      {/* Character attribution */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 flex-1">
+          {event.character && (
+            <>
+              {event.character.imageUrl && (
+                <img
+                  src={event.character.imageUrl}
+                  alt={event.character.name}
+                  className="w-8 h-8 rounded-full border-2 border-cyan-500/50 flex-shrink-0"
+                />
+              )}
+              <span className="text-cyan-400 font-semibold text-sm">
+                {event.character.name}
+              </span>
+            </>
+          )}
+          {!event.character && (
+            <span className="text-purple-400 font-semibold text-sm">
+              📖 Narrator
+            </span>
+          )}
+        </div>
+
+        {/* TTS Play Button */}
+        <button
+          onClick={handlePlayTTS}
+          className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 transition-colors"
+          aria-label={isPlaying ? 'Stop narration' : 'Play narration'}
+          title={isPlaying ? 'Stop narration' : 'Play narration'}
+        >
+          {isPlaying ? (
+            <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+          ) : (
+            <svg className="w-4 h-4 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+            </svg>
+          )}
+        </button>
       </div>
 
       {/* Main content */}
-      <div className="text-gray-200 text-base leading-relaxed">
+      <div className="text-gray-200 text-sm leading-relaxed pl-11">
         {event.content}
       </div>
 
       {/* Ability highlight (if applicable) */}
       {event.ability && (
-        <div className="mt-4 pt-4 border-t border-purple-500/30">
+        <div className="ml-11 mt-2">
           <div 
-            className="bg-gradient-to-r from-purple-900/20 via-cyan-900/20 to-purple-900/20 rounded-lg p-4 border border-purple-500/30"
+            className="bg-gradient-to-r from-purple-900/20 via-cyan-900/20 to-purple-900/20 rounded-lg p-3 border border-purple-500/30"
             style={{
-              // Simplify glow on mobile/low-end devices
               boxShadow: !simplifyEffects ? '0 0 20px rgba(168,85,247,0.2)' : undefined
             }}
           >
-            <div className="flex items-start gap-4">
+            <div className="flex items-start gap-3">
               {event.ability.icon && (
                 <motion.div 
-                  className="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-purple-500/20 rounded-lg border border-purple-400/30"
+                  className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-purple-500/20 rounded-lg border border-purple-400/30"
                   variants={prefersReducedMotion ? undefined : fadeIn}
                   initial={prefersReducedMotion ? false : "initial"}
                   animate={prefersReducedMotion ? false : "animate"}
                 >
-                  <span className="text-3xl">{event.ability.icon}</span>
+                  <span className="text-2xl">{event.ability.icon}</span>
                 </motion.div>
               )}
               <div className="flex-1">
-                <AnimatedAbilityName name={event.ability.name} />
-                <motion.p 
-                  className="text-gray-300 text-base"
-                  variants={prefersReducedMotion ? undefined : fadeIn}
-                  initial={prefersReducedMotion ? false : "initial"}
-                  animate={prefersReducedMotion ? false : "animate"}
-                  transition={prefersReducedMotion ? { duration: 0 } : { delay: 0.3 }}
-                >
+                <h4 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-magenta-400 mb-1">
+                  {event.ability.name}
+                </h4>
+                <p className="text-gray-300 text-sm">
                   {event.ability.description}
-                </motion.p>
+                </p>
               </div>
             </div>
           </div>
@@ -277,7 +307,7 @@ function EventContent({
 
       {/* Timestamp */}
       {event.timestamp && (
-        <div className="text-xs text-gray-600 mt-3">
+        <div className="text-xs text-gray-600 pl-11">
           {new Date(event.timestamp).toLocaleTimeString()}
         </div>
       )}

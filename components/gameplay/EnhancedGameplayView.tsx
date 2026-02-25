@@ -12,10 +12,8 @@ import { StatsDisplay } from './StatsDisplay';
 import { AbilitySummaryContainer } from './AbilitySummaryContainer';
 import { TurnIndicator } from './TurnIndicator';
 import { MoveSelector } from './MoveSelector';
-import { TTSControls } from './TTSControls';
 import { CharacterImageViewer } from '@/components/character/CharacterImageViewer';
 import { TypingIndicator } from '@/components/realtime/TypingIndicator';
-import { useTTSNarration } from '@/hooks/useTTSNarration';
 import { useTypingIndicator } from '@/hooks/useTypingIndicator';
 import { createSubscriptionManager } from '@/lib/realtime/subscription-manager';
 import { createRealtimeClient, subscribeToGame } from '@/lib/realtime/supabase';
@@ -49,7 +47,6 @@ export function EnhancedGameplayView({
 }: EnhancedGameplayViewProps) {
   const router = useRouter();
   const [game, setGame] = useState(initialGame);
-  const [ttsEnabled, setTtsEnabled] = useState(false);
   const [aiMoves, setAiMoves] = useState<MoveOptions>({
     A: 'Assess the situation carefully',
     B: 'Take a defensive stance',
@@ -63,18 +60,6 @@ export function EnhancedGameplayView({
 
   // Feature flag for cinematic UI (Requirement 9.1, 10.6)
   const useCinematicUI = process.env.NEXT_PUBLIC_ENABLE_CINEMATIC_UI === 'true';
-
-  // Get story content for TTS
-  const storyContent = (game.events || [])
-    .filter((e: any) => e.type === 'narrative')
-    .map((e: any) => e.content)
-    .join('\n\n');
-
-  // TTS narration hook (Requirements 13.3, 13.5)
-  useTTSNarration({
-    enabled: ttsEnabled,
-    storyContent,
-  });
 
   // Typing indicator hook (Requirements 11.1, 11.2, 11.4)
   const { handleTypingStart, handleTypingStop } = useTypingIndicator({
@@ -224,12 +209,6 @@ export function EnhancedGameplayView({
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Left Column: Story and Actions */}
             <div className="lg:col-span-2 space-y-6">
-              {/* TTS Controls */}
-              <TTSControls
-                enabled={ttsEnabled}
-                onEnabledChange={setTtsEnabled}
-              />
-
               {/* Battle Feed (Requirement 10.1) */}
               <ErrorBoundary
                 fallback={
@@ -350,12 +329,6 @@ export function EnhancedGameplayView({
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Left Column: Story and Actions */}
           <div className="lg:col-span-2 space-y-6">
-            {/* TTS Controls (Requirements 13.2, 13.4) */}
-            <TTSControls
-              enabled={ttsEnabled}
-              onEnabledChange={setTtsEnabled}
-            />
-
             {/* Story Content */}
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
