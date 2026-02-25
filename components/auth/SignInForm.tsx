@@ -38,7 +38,7 @@ export function SignInForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+    <div className="w-full max-w-md mx-auto p-6 bg-gray-900/40 backdrop-blur-md border border-gray-700 rounded-xl">
       <div className="flex justify-center mb-6">
         <Image
           src="/warlynx-logo.png"
@@ -49,13 +49,13 @@ export function SignInForm() {
           className="rounded-lg"
         />
       </div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+      <h2 className="text-2xl font-bold text-white mb-6 text-center">
         Sign in to Warlynx
       </h2>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-md">
+          <p className="text-sm text-red-400">{error}</p>
         </div>
       )}
 
@@ -63,7 +63,7 @@ export function SignInForm() {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-300 mb-1"
           >
             Email address
           </label>
@@ -74,7 +74,7 @@ export function SignInForm() {
             onChange={(e) => setEmail(e.target.value)}
             required
             disabled={isLoading}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 bg-gray-800/60 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent disabled:bg-gray-800 disabled:cursor-not-allowed"
             placeholder="you@example.com"
           />
         </div>
@@ -82,7 +82,7 @@ export function SignInForm() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-gray-300 mb-1"
           >
             Password
           </label>
@@ -93,7 +93,7 @@ export function SignInForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             disabled={isLoading}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+            className="w-full px-3 py-2 bg-gray-800/60 border border-gray-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent disabled:bg-gray-800 disabled:cursor-not-allowed"
             placeholder="••••••••"
           />
         </div>
@@ -101,17 +101,17 @@ export function SignInForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className="w-full py-2 px-4 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-cyan-500/50"
         >
           {isLoading ? "Signing in..." : "Sign in"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-600">
+      <p className="mt-6 text-center text-sm text-gray-400">
         Don&apos;t have an account?{" "}
         <a
           href="/auth/signup"
-          className="font-medium text-blue-600 hover:text-blue-700"
+          className="font-medium text-cyan-400 hover:text-cyan-300"
         >
           Sign up
         </a>

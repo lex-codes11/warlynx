@@ -79,33 +79,38 @@ export default function LobbyClient({
   const canStart = isHost && allPlayersHaveCharacters && game.players.length >= 2;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-[#0B0B12] text-white py-12 relative">
+      {/* Ambient background effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 via-transparent to-purple-500/5 pointer-events-none" />
+      
+      <div className="max-w-4xl mx-auto px-4 relative z-10">
         <div className="mb-6">
           <Link
             href="/dashboard"
-            className="text-blue-600 hover:text-blue-700 text-sm"
+            className="text-cyan-400 hover:text-cyan-300 text-sm"
           >
             ← Back to Dashboard
           </Link>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
-        <p className="text-gray-600 mb-8">Waiting for players to join...</p>
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+          {game.name}
+        </h1>
+        <p className="text-gray-400 mb-8">Waiting for players to join...</p>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-md">
+            <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-900/40 backdrop-blur-md border border-gray-700 rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-gray-200 mb-4">
               Invite Players
             </h2>
             <div className="mb-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
                 Invite Code
               </label>
               <div className="flex gap-2">
@@ -113,76 +118,76 @@ export default function LobbyClient({
                   type="text"
                   readOnly
                   value={game.inviteCode}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-50 font-mono"
+                  className="flex-1 px-3 py-2 bg-gray-800/60 border border-gray-700 rounded-md font-mono text-cyan-400"
                 />
                 <button
                   onClick={copyInviteLink}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                  className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md transition-all hover:shadow-lg hover:shadow-cyan-500/50"
                 >
                   {copied ? "Copied!" : "Copy Link"}
                 </button>
               </div>
             </div>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-400">
               Share this code or link with friends to invite them to your game.
             </p>
           </div>
 
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-900/40 backdrop-blur-md border border-gray-700 rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-gray-200 mb-4">
               Game Info
             </h2>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-gray-600">Players:</dt>
-                <dd className="font-medium">
+                <dt className="text-gray-400">Players:</dt>
+                <dd className="font-medium text-cyan-400">
                   {game.players.length}/{game.maxPlayers}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-600">Status:</dt>
-                <dd className="font-medium capitalize">{game.status}</dd>
+                <dt className="text-gray-400">Status:</dt>
+                <dd className="font-medium text-cyan-400 capitalize">{game.status}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-gray-600">Your Role:</dt>
-                <dd className="font-medium">{isHost ? "Host" : "Player"}</dd>
+                <dt className="text-gray-400">Your Role:</dt>
+                <dd className="font-medium text-cyan-400">{isHost ? "Host" : "Player"}</dd>
               </div>
             </dl>
           </div>
         </div>
 
-        <div className="bg-white shadow rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-gray-900/40 backdrop-blur-md border border-gray-700 rounded-xl p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-200 mb-4">
             Players ({game.players.length}/{game.maxPlayers})
           </h2>
           <div className="space-y-3">
             {game.players.map((player) => (
               <div
                 key={player.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-md"
+                className="flex items-center justify-between p-4 bg-gray-800/40 border border-gray-700 rounded-md"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-200">
                       {player.user.displayName || player.user.email}
                     </p>
                     {player.userId === game.hostId && (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 rounded">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/30 rounded">
                         Host
                       </span>
                     )}
                     {player.userId === userId && (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 rounded">
                         You
                       </span>
                     )}
                   </div>
                   {player.character ? (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-green-400 mt-1">
                       ✓ Character: {player.character.name}
                     </p>
                   ) : (
-                    <p className="text-sm text-amber-600 mt-1">
+                    <p className="text-sm text-amber-400 mt-1">
                       ⚠️ No character created
                     </p>
                   )}
@@ -190,7 +195,7 @@ export default function LobbyClient({
                 {player.userId === userId && !player.character && (
                   <Link
                     href={`/game/${game.id}/character/create`}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition-colors"
+                    className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-medium rounded-md transition-all hover:shadow-lg hover:shadow-cyan-500/50"
                   >
                     Create Character
                   </Link>
@@ -201,24 +206,24 @@ export default function LobbyClient({
         </div>
 
         {isHost && (
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="bg-gray-900/40 backdrop-blur-md border border-gray-700 rounded-xl p-6">
+            <h2 className="text-lg font-semibold text-gray-200 mb-4">
               Start Game
             </h2>
             {!allPlayersHaveCharacters && (
-              <p className="text-sm text-amber-600 mb-4">
+              <p className="text-sm text-amber-400 mb-4">
                 ⚠️ All players must create their characters before starting
               </p>
             )}
             {game.players.length < 2 && (
-              <p className="text-sm text-amber-600 mb-4">
+              <p className="text-sm text-amber-400 mb-4">
                 ⚠️ At least 2 players are required to start
               </p>
             )}
             <button
               onClick={handleStartGame}
               disabled={!canStart || starting}
-              className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 px-4 bg-green-600 hover:bg-green-700 text-white font-medium rounded-md disabled:bg-gray-600 disabled:cursor-not-allowed transition-all hover:shadow-lg hover:shadow-green-500/50"
             >
               {starting ? "Starting..." : "Start Game"}
             </button>
@@ -226,13 +231,13 @@ export default function LobbyClient({
         )}
 
         {!isHost && !hasCharacter && (
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
-            <p className="text-amber-800 font-medium mb-2">
+          <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-6">
+            <p className="text-amber-400 font-medium mb-2">
               Create your character to get ready!
             </p>
             <Link
               href={`/game/${game.id}/character/create`}
-              className="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md transition-colors"
+              className="inline-block px-6 py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-medium rounded-md transition-all hover:shadow-lg hover:shadow-cyan-500/50"
             >
               Create Character
             </Link>

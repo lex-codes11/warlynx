@@ -46,8 +46,11 @@ export default async function CreateCharacterPage({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-4xl mx-auto px-4">
+    <div className="min-h-screen bg-[#0B0B12] text-white py-12 relative">
+      {/* Ambient background effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 via-transparent to-purple-500/5 pointer-events-none" />
+      
+      <div className="max-w-4xl mx-auto px-4 relative z-10">
         <CharacterCreateClient gameId={game.id} />
       </div>
     </div>
