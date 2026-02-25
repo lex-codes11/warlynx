@@ -305,6 +305,21 @@ ${currentTurn > 30 ? '- LATE GAME: DEADLY encounters, high stakes. Enemies are e
 - When players level up, create NEW creative abilities or enhance existing ones
 - Be generous with power - this is a power fantasy game!
 
+**SURRENDER & ELIMINATION MECHANICS**:
+- Players can SURRENDER or GIVE UP at any time
+- When a player surrenders:
+  * They are immediately eliminated from the game
+  * Their character dies (set HP to 0)
+  * Generate a narrative describing their surrender/withdrawal
+  * They cannot rejoin this game
+- Players can also SELF-DESTRUCT (suicide attack):
+  * Player's character dies (HP to 0)
+  * If enemies/opponents are nearby, they take MASSIVE damage (40-80% of their maxHP)
+  * Describe the dramatic explosion/final attack
+  * This is a valid tactical choice (sacrifice for team advantage)
+- Surrender keywords: "surrender", "give up", "forfeit", "quit", "withdraw"
+- Self-destruct keywords: "self destruct", "suicide attack", "kamikaze", "sacrifice myself", "blow myself up"
+
 **LEARNING & ADAPTATION**:
 - Players may provide context about their universe, items, or abilities (e.g., "Compound V is a serum that...")
 - LEARN and REMEMBER this information for future turns
@@ -463,6 +478,11 @@ Generate the next turn of the game:
    - **WHEN DAMAGE OCCURS**: Generate stat updates for BOTH attacker AND defender
      * Attacker: May gain experience, use resources, or trigger abilities
      * Defender: MUST receive HP damage (negative hp value)
+   - **⚠️ CRITICAL RULE**: ONLY damage characters that are DIRECTLY involved in the action!
+     * If Player A attacks Player B, ONLY Player B takes damage
+     * If Player A does something that doesn't involve Player C, Player C's HP should NOT change
+     * Don't apply random damage to uninvolved characters
+     * Environmental damage (explosions, traps) can affect multiple characters if they're in the area
    - **WHEN HEALING OCCURS**: Character receives HP healing (positive hp value)
    - **STATUS EFFECTS**: Apply buffs, debuffs, or conditions to affected characters
    - **LEVEL UPS**: Award level ups for significant achievements (defeating bosses, completing quests, epic moments)
