@@ -71,9 +71,9 @@ export function TTSControls({
   };
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg shadow-sm p-4 ${className}`}>
+    <div className={`bg-gray-900/60 backdrop-blur-lg border border-cyan-500/30 rounded-xl shadow-[0_0_20px_rgba(6,182,212,0.2)] p-4 ${className}`}>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-sm font-semibold text-cyan-400">
           Text-to-Speech
         </h3>
 
@@ -82,7 +82,7 @@ export function TTSControls({
           onClick={handleToggleEnabled}
           className={`
             relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-            ${enabled ? 'bg-blue-600' : 'bg-gray-300'}
+            ${enabled ? 'bg-cyan-600' : 'bg-gray-700'}
           `}
           aria-label={enabled ? 'Disable text-to-speech' : 'Enable text-to-speech'}
         >
@@ -102,10 +102,10 @@ export function TTSControls({
             <div
               className={`
                 w-2 h-2 rounded-full
-                ${isPlaying ? 'bg-green-500 animate-pulse' : isPaused ? 'bg-yellow-500' : 'bg-gray-400'}
+                ${isPlaying ? 'bg-green-500 animate-pulse' : isPaused ? 'bg-yellow-500' : 'bg-gray-500'}
               `}
             />
-            <span className="text-xs text-gray-600">
+            <span className="text-xs text-gray-300">
               {isPlaying ? 'Playing' : isPaused ? 'Paused' : 'Ready'}
             </span>
           </div>
@@ -123,8 +123,8 @@ export function TTSControls({
               flex items-center justify-center w-10 h-10 rounded-lg transition-colors
               ${
                 isPlaying
-                  ? 'bg-blue-100 hover:bg-blue-200 text-blue-700'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 border border-cyan-500/30'
+                  : 'bg-gray-800/50 text-gray-600 cursor-not-allowed border border-gray-700/30'
               }
             `}
             aria-label="Pause"
@@ -151,8 +151,8 @@ export function TTSControls({
               flex items-center justify-center w-10 h-10 rounded-lg transition-colors
               ${
                 isPaused
-                  ? 'bg-green-100 hover:bg-green-200 text-green-700'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/30'
+                  : 'bg-gray-800/50 text-gray-600 cursor-not-allowed border border-gray-700/30'
               }
             `}
             aria-label="Resume"
@@ -179,8 +179,8 @@ export function TTSControls({
               flex items-center justify-center w-10 h-10 rounded-lg transition-colors
               ${
                 isPlaying || isPaused
-                  ? 'bg-red-100 hover:bg-red-200 text-red-700'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  ? 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30'
+                  : 'bg-gray-800/50 text-gray-600 cursor-not-allowed border border-gray-700/30'
               }
             `}
             aria-label="Stop"
@@ -203,7 +203,7 @@ export function TTSControls({
 
       {/* Disabled State Message */}
       {!enabled && (
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-gray-400 mt-2">
           Enable text-to-speech to hear story narration
         </p>
       )}

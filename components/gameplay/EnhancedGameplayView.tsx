@@ -233,7 +233,7 @@ export function EnhancedGameplayView({
               {/* Battle Feed (Requirement 10.1) */}
               <ErrorBoundary
                 fallback={
-                  <div className="bg-gray-950/80 backdrop-blur-md border border-red-500/30 rounded-xl p-6">
+                  <div className="bg-gray-900/40 backdrop-blur-md border border-red-500/30 rounded-xl p-6">
                     <p className="text-red-400 text-center">
                       Unable to load battle feed. Please refresh the page.
                     </p>
@@ -246,7 +246,7 @@ export function EnhancedGameplayView({
               {/* Decision Terminal (Requirement 10.3) */}
               <ErrorBoundary
                 fallback={
-                  <div className="bg-gray-950/80 backdrop-blur-md border border-red-500/30 rounded-xl p-6">
+                  <div className="bg-gray-900/40 backdrop-blur-md border border-red-500/30 rounded-xl p-6">
                     <p className="text-red-400 text-center">
                       Unable to load decision terminal. Please refresh the page.
                     </p>
@@ -271,7 +271,7 @@ export function EnhancedGameplayView({
               {/* Turn Indicator (Requirement 10.5) */}
               <ErrorBoundary
                 fallback={
-                  <div className="bg-gray-950/80 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
+                  <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
                     <p className="text-red-400 text-center text-sm">
                       Unable to load turn indicator
                     </p>
@@ -294,7 +294,7 @@ export function EnhancedGameplayView({
                     <ErrorBoundary
                       key={char.id}
                       fallback={
-                        <div className="bg-gray-950/80 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
+                        <div className="bg-gray-900/60 backdrop-blur-lg border border-red-500/30 rounded-xl p-4">
                           <p className="text-red-400 text-center text-sm">
                             Unable to load character card
                           </p>
@@ -326,7 +326,7 @@ export function EnhancedGameplayView({
         {activeCharacter && (
           <ErrorBoundary
             fallback={
-              <div className="fixed bottom-0 left-0 right-0 z-40 bg-gray-950/90 backdrop-blur-xl border-t border-red-500/30 p-4">
+              <div className="fixed bottom-0 left-0 right-0 z-40 bg-gray-900/80 backdrop-blur-xl border-t border-red-500/30 p-4">
                 <p className="text-red-400 text-center text-sm">
                   Unable to load power HUD
                 </p>

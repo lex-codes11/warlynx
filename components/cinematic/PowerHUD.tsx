@@ -118,7 +118,7 @@ export function PowerHUD({ character, visible }: PowerHUDProps) {
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed bottom-0 left-0 right-0 bg-gray-950/90 backdrop-blur-xl border-t border-cyan-500/30"
+          className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-xl border-t border-cyan-500/30"
           style={{ zIndex: Z_INDEX.hud }}
           variants={prefersReducedMotion ? undefined : slideInBottom}
           initial={prefersReducedMotion ? undefined : "initial"}
@@ -261,7 +261,7 @@ interface StatDisplayProps {
 function StatDisplay({ label, value, color, ariaLabel }: StatDisplayProps) {
   return (
     <div 
-      className="bg-gray-950/90 backdrop-blur-md rounded-lg px-4 py-2 border border-gray-800/50"
+      className="bg-gray-900/90 backdrop-blur-md rounded-lg px-4 py-2 border border-gray-700/50"
       role="status"
       aria-label={ariaLabel || `${label}: ${value}`}
     >
