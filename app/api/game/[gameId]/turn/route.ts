@@ -299,14 +299,16 @@ export async function POST(
         );
       }
 
-      // Store action event
+      // Store action event - this shows what choice the player made
       await prisma.gameEvent.create({
         data: {
           gameId,
           turnId: turn.id,
           characterId: activePlayer.character.id,
           type: 'action',
-          content: `${activePlayer.character.name} chose: ${action}`,
+          content: isStandardChoice 
+            ? `${activePlayer.character.name} chose option ${action}`
+            : `${activePlayer.character.name}: ${action}`,
           metadata: {
             action,
             playerId: userId,
@@ -314,19 +316,19 @@ export async function POST(
         },
       });
 
-      // Store narrative event
-    await prisma.gameEvent.create({
-      data: {
-        gameId,
-        turnId: turn.id,
-        characterId: null,
-        type: 'narrative',
-        content: dmResponse.narrative,
-        metadata: {
-          choices: dmResponse.choices,
-        } as any,
-      },
-    });
+      // Store narrative event - this shows what actually happened
+      await prisma.gameEvent.create({
+        data: {
+          gameId,
+          turnId: turn.id,
+          characterId: activePlayer.character.id, // Changed from null to show player's character
+          type: 'narrative',
+          content: dmResponse.narrative,
+          metadata: {
+            choices: dmResponse.choices,
+          } as any,
+        },
+      });
 
     // Process stat updates
     const updatedPowerSheets = await processStatUpdates(

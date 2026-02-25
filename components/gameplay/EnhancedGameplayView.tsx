@@ -98,16 +98,25 @@ export function EnhancedGameplayView({
     // Subscribe to game events (turn resolved, stats updated, etc.)
     const gameChannel = subscribeToGame(supabaseClient, game.id, {
       onTurnResolved: async (response: any) => {
+        console.log('Turn resolved, refreshing game state');
         // Use Next.js router to refresh server data without full page reload
         router.refresh();
         setIsSubmittingMove(false);
+        // Force reload moves for new turn
+        setIsLoadingMoves(false);
       },
       onStatsUpdated: (update: any) => {
+        console.log('Stats updated, refreshing');
         // Stats will be updated via router.refresh()
         router.refresh();
       },
       onCharacterUpdated: (character: any) => {
+        console.log('Character updated, refreshing');
         // Character will be updated via router.refresh()
+        router.refresh();
+      },
+      onGameUpdated: (gameUpdate: any) => {
+        console.log('Game updated, refreshing');
         router.refresh();
       },
     });
