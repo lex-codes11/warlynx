@@ -390,11 +390,66 @@ Generate the next turn of the game:
    - **NEW PERKS**: Grant perks when leveling up
    - **CRITICAL**: Use the exact Character ID from the character list above, NOT the character name
    
-   EXAMPLE: If Charizard attacks Blastoise and deals damage, you MUST include:
-   {
-     "characterId": "cmm1475t600037h8n05vva97l",
-     "changes": { "hp": -15 }
-   }
+   **DAMAGE CALCULATION GUIDELINES**:
+   Calculate HP damage dynamically based on these factors:
+   
+   a) **Base Damage Range** (% of target's max HP):
+      - Weak/Glancing hit: 5-10% of maxHP
+      - Normal hit: 10-20% of maxHP
+      - Strong hit: 20-35% of maxHP
+      - Critical/Devastating hit: 35-50% of maxHP
+      - Ultimate/Finishing move: 50-80% of maxHP
+   
+   b) **Attribute Modifiers** (adjust damage up/down by 20-40%):
+      - Attacker's relevant attribute (Strength for physical, Intelligence for magic, etc.)
+      - Defender's Endurance reduces damage
+      - High attribute (70+): +30-40% damage
+      - Medium attribute (40-69): Normal damage
+      - Low attribute (<40): -20-30% damage
+   
+   c) **Weakness Exploitation** (CRITICAL):
+      - If attack directly exploits target's weakness: +50-100% damage (can be devastating!)
+      - Example: Water attack vs fire weakness, psychic attack vs low intelligence
+      - Weakness hits should feel IMPACTFUL and potentially game-changing
+   
+   d) **Action Context**:
+      - Extreme/risky actions: Higher damage potential
+      - Desperate/all-out attacks: Maximum damage but may have consequences
+      - Cautious/defensive actions: Lower damage
+      - Environmental advantages: +20-30% damage
+   
+   e) **Difficulty Curve**:
+      - Easy: Reduce damage by 20%
+      - Medium: Normal damage
+      - Hard: Increase damage by 20%
+      - Brutal: Increase damage by 40%
+   
+   **EXAMPLE CALCULATIONS**:
+   - Blastoise (Strength 80) uses Hydro Blast on Charizard (fire weakness, Endurance 45, maxHP 120):
+     * Base: 30% of 120 = 36 HP (strong hit)
+     * High Strength: +35% = 49 HP
+     * Weakness exploitation: +75% = 86 HP
+     * Final: -86 HP (devastating, nearly fatal)
+   
+   - Pikachu (Intelligence 60) uses Thunder Shock on Squirtle (Endurance 70, maxHP 150):
+     * Base: 15% of 150 = 23 HP (normal hit)
+     * Medium Intelligence: No modifier
+     * High Endurance: -25% = 17 HP
+     * Final: -17 HP (moderate damage)
+   
+   - Weak punch from exhausted character (Strength 30) on tank (Endurance 85, maxHP 200):
+     * Base: 8% of 200 = 16 HP (weak hit)
+     * Low Strength: -25% = 12 HP
+     * Very High Endurance: -30% = 8 HP
+     * Final: -8 HP (barely scratched)
+   
+   **IMPORTANT**: 
+   - NEVER use fixed damage values like -15 HP for everything
+   - Consider the narrative context and make damage feel appropriate
+   - Weakness exploitation should be DRAMATIC and potentially decisive
+   - Tank characters (high Endurance) should take noticeably less damage
+   - Glass cannons (high offense, low Endurance) should take heavy damage
+   - Calculate damage as a PERCENTAGE of maxHP, then apply modifiers
 
 CRITICAL RULES:
 - KEEP IT SHORT - Maximum 8 sentences for narrative
