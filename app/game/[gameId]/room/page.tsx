@@ -5,6 +5,10 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { EnhancedGameplayView } from "@/components/gameplay/EnhancedGameplayView";
 
+// Disable caching for this page to ensure fresh game state
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function GameRoomPage({
   params,
 }: {

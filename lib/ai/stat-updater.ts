@@ -198,7 +198,7 @@ Return JSON in this format:
 }`;
 
   const response = await getOpenAIClient().chat.completions.create({
-    model: 'gpt-4',
+    model: 'gpt-4o-mini',
     messages: [
       {
         role: 'system',
@@ -211,7 +211,6 @@ Return JSON in this format:
     ],
     temperature: 0.7,
     max_tokens: 300,
-    response_format: { type: 'json_object' },
   });
 
   const content = response.choices[0]?.message?.content;
