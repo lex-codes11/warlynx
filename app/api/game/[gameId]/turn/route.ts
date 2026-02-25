@@ -201,16 +201,33 @@ export async function POST(
       const thirtySecondsAgo = new Date(Date.now() - 30 * 1000);
       if (existingTurn.phase === 'resolving' && existingTurn.startedAt < thirtySecondsAgo) {
         // Delete stuck turn and allow retry
+        console.log(`Cleaning up stuck turn ${existingTurn.id} from ${existingTurn.startedAt}`);
         await prisma.turn.delete({
           where: { id: existingTurn.id },
         });
-      } else {
+        console.log('Stuck turn cleaned up, proceeding with new turn');
+      } else if (existingTurn.phase === 'resolving') {
+        // Turn is recent, still processing
+        const secondsAgo = Math.floor((Date.now() - existingTurn.startedAt.getTime()) / 1000);
         return NextResponse.json(
           {
             success: false,
             error: {
               code: 'TURN_ALREADY_PROCESSING',
-              message: 'A turn is already being processed. Please wait.',
+              message: `A turn is already being processed (started ${secondsAgo}s ago). Please wait.`,
+              retryable: true,
+            },
+          },
+          { status: 409 }
+        );
+      } else {
+        // Turn exists but not in resolving state - shouldn't happen
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: 'TURN_ALREADY_EXISTS',
+              message: 'A turn already exists for this turn index',
               retryable: false,
             },
           },
