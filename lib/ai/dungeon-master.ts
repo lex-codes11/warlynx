@@ -263,12 +263,14 @@ ${ps.perks.length > 0 ? `Perks:\n${ps.perks.map(p => `  - ${p.name}: ${p.descrip
 `.trim();
   };
 
-  // Format all characters
+  // Format all characters with VERY CLEAR ID labeling
   const allCharactersText = allCharacters.map(char => {
     const status = char.powerSheet.hp <= 0 ? ' [DEAD]' : '';
     return `
-${char.name} (${char.displayName})${status}
-Character ID: ${char.id}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CHARACTER: ${char.name} (${char.displayName})${status}
+⚠️  IMPORTANT - USE THIS ID IN statUpdates: "${char.id}"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Fusion: ${char.fusionIngredients}
 ${formatPowerSheet(char.powerSheet)}
 `.trim();
@@ -579,9 +581,48 @@ async function attemptTurnNarrativeGeneration(
 
   // Parse and validate response
   const parsedResponse = JSON.parse(content) as AITurnResponse;
-  const validatedResponse = validateTurnResponse(parsedResponse);
+  const validatedResponse = validateTurnResponse(parsedResponse, context);
 
   return validatedResponse;
+}
+
+/**
+ * Validate and fix character IDs in stat updates
+ * Converts character names to IDs if the AI used names instead
+ */
+function validateAndFixCharacterIds(
+  statUpdates: StatUpdate[],
+  allCharacters: DMPromptContext['allCharacters']
+): StatUpdate[] {
+  return statUpdates.map(update => {
+    // Check if characterId looks like a name (doesn't start with 'c' and contain alphanumeric ID pattern)
+    const looksLikeId = /^c[a-z0-9]{20,}$/i.test(update.characterId);
+    
+    if (!looksLikeId) {
+      // Try to find character by name (case-insensitive)
+      const matchedChar = allCharacters.find(
+        char => char.name.toLowerCase() === update.characterId.toLowerCase()
+      );
+      
+      if (matchedChar) {
+        console.warn(
+          `AI used character name "${update.characterId}" instead of ID. ` +
+          `Auto-correcting to "${matchedChar.id}"`
+        );
+        return {
+          ...update,
+          characterId: matchedChar.id,
+        };
+      } else {
+        console.error(
+          `Could not find character matching "${update.characterId}". ` +
+          `Available characters: ${allCharacters.map(c => c.name).join(', ')}`
+        );
+      }
+    }
+    
+    return update;
+  });
 }
 
 /**
@@ -589,7 +630,7 @@ async function attemptTurnNarrativeGeneration(
  * 
  * **Validates: Requirement 7.4** - Exactly 4 choices labeled A, B, C, D
  */
-export function validateTurnResponse(data: any): TurnNarrativeResponse {
+export function validateTurnResponse(data: any, context?: DMPromptContext): TurnNarrativeResponse {
   // Check if this is an invalid action response
   if (data.valid === false) {
     if (!data.validationError || typeof data.validationError !== 'string') {
@@ -699,11 +740,16 @@ export function validateTurnResponse(data: any): TurnNarrativeResponse {
     }
   );
 
+  // Fix character IDs if AI used names instead
+  const fixedStatUpdates = context 
+    ? validateAndFixCharacterIds(validatedStatUpdates, context.allCharacters)
+    : validatedStatUpdates;
+
   return {
     success: true,
     narrative: data.narrative,
     choices: validatedChoices,
-    statUpdates: validatedStatUpdates,
+    statUpdates: fixedStatUpdates,
     validationError: null,
   };
 }
