@@ -105,25 +105,22 @@ export function EnhancedGameplayView({
           turnId: response.turnId,
           nextActivePlayer: response.nextActivePlayer,
         });
-        // Use Next.js router to refresh server data without full page reload
-        router.refresh();
-        setIsSubmittingMove(false);
-        // Force reload moves for new turn
-        setIsLoadingMoves(false);
+        // Force full page reload to ensure stats are updated
+        window.location.reload();
       },
       onStatsUpdated: (update: any) => {
         console.log('Stats updated event received:', update);
-        // Stats will be updated via router.refresh()
-        router.refresh();
+        // Force full page reload to ensure stats are updated
+        window.location.reload();
       },
       onCharacterUpdated: (character: any) => {
         console.log('Character updated event received:', character);
-        // Character will be updated via router.refresh()
-        router.refresh();
+        // Force full page reload to ensure character data is updated
+        window.location.reload();
       },
       onGameUpdated: (gameUpdate: any) => {
         console.log('Game updated event received:', gameUpdate);
-        router.refresh();
+        window.location.reload();
       },
     });
 
