@@ -146,21 +146,34 @@ export function PowerCard({ character, isActive, onDamage }: PowerCardProps) {
   // Simplify effects on mobile/low-end devices
   const simplifyEffects = isMobile || isLowEndDevice;
 
+  // Safely extract character data with defaults
+  const charData = character as any;
+  const safeCharacter = {
+    id: character.id,
+    name: character.name || 'Unknown',
+    imageUrl: character.imageUrl,
+    hp: charData.powerSheet?.hp ?? character.hp ?? 100,
+    maxHp: charData.powerSheet?.maxHp ?? character.maxHp ?? 100,
+    level: charData.powerSheet?.level ?? character.level ?? 1,
+    status: charData.powerSheet?.statuses ?? character.status ?? [],
+    fusionTags: character.fusionTags ?? [],
+  };
+
   // Trigger shake animation when HP decreases (damage taken)
   useEffect(() => {
-    if (character.hp < prevHp) {
+    if (safeCharacter.hp < prevHp) {
       setShouldShake(true);
       if (onDamage) {
         onDamage();
       }
       setTimeout(() => setShouldShake(false), 500);
     }
-    setPrevHp(character.hp);
-  }, [character.hp, prevHp, onDamage]);
+    setPrevHp(safeCharacter.hp);
+  }, [safeCharacter.hp, prevHp, onDamage]);
 
   // Calculate HP percentage for color
-  const hpPercentage = (character.hp / character.maxHp) * 100;
-  const hpColor = getHPColor(character.hp, character.maxHp);
+  const hpPercentage = (safeCharacter.hp / safeCharacter.maxHp) * 100;
+  const hpColor = getHPColor(safeCharacter.hp, safeCharacter.maxHp);
 
   // Determine border style based on active state
   const borderClass = isActive ? BORDER_STYLES.active : BORDER_STYLES.default;
@@ -186,16 +199,16 @@ export function PowerCard({ character, isActive, onDamage }: PowerCardProps) {
     >
       {/* Character Portrait - Requirement 3.1 */}
       <div className="relative aspect-[3/4] overflow-hidden">
-        {character.imageUrl ? (
+        {safeCharacter.imageUrl ? (
           <img
-            src={character.imageUrl}
-            alt={character.name}
+            src={safeCharacter.imageUrl}
+            alt={safeCharacter.name}
             className="w-full h-full object-cover"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
             <span className="text-6xl font-bold text-gray-600">
-              {character.name.charAt(0).toUpperCase()}
+              {safeCharacter.name.charAt(0).toUpperCase()}
             </span>
           </div>
         )}
@@ -230,29 +243,29 @@ export function PowerCard({ character, isActive, onDamage }: PowerCardProps) {
           {/* HP Badge */}
           <StatBadge
             label="HP"
-            value={`${character.hp}/${character.maxHp}`}
+            value={`${safeCharacter.hp}/${safeCharacter.maxHp}`}
             color={hpColor}
             percentage={hpPercentage}
-            ariaLabel={`Health: ${character.hp} out of ${character.maxHp}`}
+            ariaLabel={`Health: ${safeCharacter.hp} out of ${safeCharacter.maxHp}`}
             simplifyEffects={simplifyEffects}
           />
 
           {/* Level Badge */}
           <StatBadge
             label="LVL"
-            value={character.level.toString()}
+            value={safeCharacter.level.toString()}
             color="#06B6D4"
-            ariaLabel={`Level ${character.level}`}
+            ariaLabel={`Level ${safeCharacter.level}`}
             simplifyEffects={simplifyEffects}
           />
         </div>
 
         {/* Status Effects - Requirement 3.3 */}
-        {character.status && character.status.length > 0 && (
+        {safeCharacter.status && safeCharacter.status.length > 0 && (
           <div className="absolute bottom-0 left-0 right-0 p-3">
             <div className="flex flex-wrap gap-2">
-              {character.status.map((effect) => (
-                <StatusBadge key={effect.id} effect={effect} simplifyEffects={simplifyEffects} />
+              {safeCharacter.status.map((effect: any) => (
+                <StatusBadge key={effect.id || effect.name} effect={effect} simplifyEffects={simplifyEffects} />
               ))}
             </div>
           </div>
@@ -263,13 +276,13 @@ export function PowerCard({ character, isActive, onDamage }: PowerCardProps) {
       <div className="p-4 space-y-2">
         {/* Character Name */}
         <h3 className={cn(TYPOGRAPHY.characterName, 'text-center')}>
-          {character.name}
+          {safeCharacter.name}
         </h3>
 
         {/* Fusion Tags - Requirement 3.4 */}
-        {character.fusionTags && character.fusionTags.length > 0 && (
+        {safeCharacter.fusionTags && safeCharacter.fusionTags.length > 0 && (
           <div className="flex flex-wrap gap-2 justify-center">
-            {character.fusionTags.map((tag, index) => (
+            {safeCharacter.fusionTags.map((tag, index) => (
               <FusionTag key={`${tag}-${index}`} tag={tag} simplifyEffects={simplifyEffects} />
             ))}
           </div>
