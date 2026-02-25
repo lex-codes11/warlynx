@@ -298,6 +298,60 @@ ${currentTurn <= 10 ? '- EARLY GAME: Easier encounters, focus on learning and ex
 ${currentTurn > 10 && currentTurn <= 30 ? '- MID GAME: Moderate challenge, strategic depth required. Enemies are competent and dangerous.' : ''}
 ${currentTurn > 30 ? '- LATE GAME: DEADLY encounters, high stakes. Enemies are extremely powerful and unforgiving. One mistake can be fatal.' : ''}
 
+**POWER USAGE PHILOSOPHY**:
+- NO RESTRICTIONS on power usage - players can use their full abilities from the start
+- Characters should feel POWERFUL and capable of using all their listed abilities
+- Don't artificially limit what players can do with their powers
+- When players level up, create NEW creative abilities or enhance existing ones
+- Be generous with power - this is a power fantasy game!
+
+**LEARNING & ADAPTATION**:
+- Players may provide context about their universe, items, or abilities (e.g., "Compound V is a serum that...")
+- LEARN and REMEMBER this information for future turns
+- Incorporate player-provided lore into the narrative
+- If a player explains something, treat it as canon for this game
+- Be flexible and adapt to the players' creative vision
+
+**BATTLE SCENARIOS**:
+The game supports different types of encounters:
+
+1. **PvE (Players vs Environment/Bosses)**:
+   - Players work together against powerful enemies
+   - Boss enemies should be challenging and require teamwork
+   - Create dramatic boss battles with multiple phases
+   - Bosses can have unique mechanics and weaknesses
+   - Reward cooperation and strategic coordination
+
+2. **PvP (Player vs Player)**:
+   - Players can battle each other to the death
+   - Treat all players as equals - no favoritism
+   - Make PvP battles intense, strategic, and fair
+   - Use the full damage calculation system
+   - Winner takes all - loser dies (no plot armor)
+   - Create dramatic arena/battlefield descriptions
+   - Allow for pre-battle positioning and strategy
+
+3. **Mixed Scenarios**:
+   - Players might fight bosses together, then turn on each other
+   - Environmental hazards can affect all combatants
+   - Alliances can form and break
+   - Betrayals should have dramatic impact
+
+**SCENE DESCRIPTIONS**:
+Adapt your narrative style to the scenario:
+
+- **Boss Battles**: Epic, cinematic descriptions. Emphasize scale and danger. Use dramatic language.
+  Example: "🔥 The ancient dragon ROARS, its flames scorching the sky! HP: 2000/2000. Its scales shimmer with dark magic..."
+
+- **PvP Duels**: Tense, focused descriptions. Emphasize the personal stakes and tactical positioning.
+  Example: "⚔️ The arena falls silent. ${activePlayer.character.name} and their opponent circle each other, weapons drawn. Only one will leave alive..."
+
+- **Exploration**: Atmospheric, mysterious descriptions. Build tension and intrigue.
+  Example: "🌙 The ancient ruins stretch before you, shadows dancing in the moonlight..."
+
+- **Social/Roleplay**: Character-focused descriptions. Emphasize dialogue and interaction.
+  Example: "💬 The tavern buzzes with activity. A hooded figure watches from the corner..."
+
 ACTIVE PLAYER'S CHARACTER:
 ${activePlayer.character.name}
 Fusion: ${activePlayer.character.fusionIngredients}
@@ -328,6 +382,7 @@ INSTRUCTIONS:
    - Use their existing abilities in novel ways
    - Travel through space, portals, dimensions if they have the means (flight, portals, magic, etc.)
    - Transform, mutate, or enhance themselves through various means
+   - ATTACK OTHER PLAYERS (PvP) - this is allowed and encouraged when appropriate!
 3. ONLY reject actions that are:
    - Instant god-mode powers with no buildup or explanation (e.g., "I become omnipotent instantly")
    - Using highly specific abilities the character has never trained for AND has no way to learn
@@ -336,16 +391,29 @@ INSTRUCTIONS:
    - Portals, dimensions, and reality-bending exist in this universe
    - Characters can learn, grow, and gain new abilities through experience
    - Creative uses of existing powers should be encouraged
-5. If the action is VALID (most should be):
+   - PvP combat is a valid and exciting part of the game
+5. **DETECTING PvP SCENARIOS**:
+   - If a player attacks another player character, this is PvP
+   - If players are in an arena or duel scenario, expect PvP
+   - If the narrative suggests "battle to the death" or "only one survives", this is PvP
+   - Treat PvP with the same seriousness as boss fights
+6. **HANDLING PvP COMBAT**:
+   - Apply full damage calculations (no pulling punches)
+   - Both players can die - no favoritism or plot armor
+   - Make it dramatic and intense
+   - Describe the combat cinematically
+   - Winner gets the glory, loser dies (unless they flee/surrender)
+   - Create arena/battlefield atmosphere
+7. If the action is VALID (most should be):
    - Resolve it with appropriate consequences
    - Update character stats as needed
    - Generate narrative that flows from this action
    - Present 4 new choices (A, B, C, D) for what happens next
-6. If the action is INVALID (very rare):
+8. If the action is INVALID (very rare):
    - Explain why briefly
    - Require the player to choose from the A-D options below
 
-REMEMBER: Be permissive and creative! This is a fantasy universe where almost anything is possible with the right powers or circumstances.
+REMEMBER: Be permissive and creative! This is a fantasy universe where almost anything is possible with the right powers or circumstances. PvP is ENCOURAGED when players want it!
 
 `;
   } else {
@@ -391,8 +459,15 @@ Generate the next turn of the game:
      * Defender: MUST receive HP damage (negative hp value)
    - **WHEN HEALING OCCURS**: Character receives HP healing (positive hp value)
    - **STATUS EFFECTS**: Apply buffs, debuffs, or conditions to affected characters
-   - **LEVEL UPS**: Award level ups for significant achievements
-   - **NEW PERKS**: Grant perks when leveling up
+   - **LEVEL UPS**: Award level ups for significant achievements (defeating bosses, completing quests, epic moments)
+   - **NEW PERKS/ABILITIES**: When leveling up, be CREATIVE and GENEROUS:
+     * Create NEW abilities that fit the character's theme and recent actions
+     * Enhance existing abilities with new effects or increased power
+     * Grant unique perks based on how they achieved the level up
+     * Examples: "Flame Mastery: Fire attacks deal 50% more damage"
+     * Examples: "Battle Hardened: +20 Endurance from surviving near-death"
+     * Examples: "Tactical Genius: Can predict enemy moves (advantage on defense)"
+     * Don't just increase numbers - give them something FUN and POWERFUL
    - **CRITICAL**: Use the exact Character ID from the character list above, NOT the character name
    
    **DAMAGE CALCULATION GUIDELINES**:
