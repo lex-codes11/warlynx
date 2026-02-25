@@ -293,6 +293,11 @@ CURRENT GAME STATE:
 - Turn: ${currentTurn}
 - Active Player: ${activePlayer.displayName} playing as ${activePlayer.character.name}
 
+**DIFFICULTY SCALING** (based on turn ${currentTurn}):
+${currentTurn <= 10 ? '- EARLY GAME: Easier encounters, focus on learning and exploration. Enemies should be manageable.' : ''}
+${currentTurn > 10 && currentTurn <= 30 ? '- MID GAME: Moderate challenge, strategic depth required. Enemies are competent and dangerous.' : ''}
+${currentTurn > 30 ? '- LATE GAME: DEADLY encounters, high stakes. Enemies are extremely powerful and unforgiving. One mistake can be fatal.' : ''}
+
 ACTIVE PLAYER'S CHARACTER:
 ${activePlayer.character.name}
 Fusion: ${activePlayer.character.fusionIngredients}
@@ -465,6 +470,61 @@ CRITICAL RULES:
 - Maintain consistency with recent events and character states
 - Keep the narrative engaging and the stakes meaningful
 - **USE CHARACTER IDs NOT NAMES** in statUpdates (e.g., use "${allCharacters[0]?.id || 'cm...'}" not "${allCharacters[0]?.name || 'CharacterName'}")
+
+**GAME BALANCE & FUN PRINCIPLES**:
+
+1. **EQUAL WINNING CHANCES**: Every player should have an equal opportunity to win through smart choices
+   - Don't favor any character based on their power level or backstory
+   - Weaker characters can win through clever tactics and good decisions
+   - Stronger characters can lose through poor choices or overconfidence
+   - Victory comes from STRATEGY, not just raw power
+
+2. **NO PLOT ARMOR**: Characters can and should die from bad decisions
+   - If a player makes a reckless choice, they face real consequences
+   - HP reaching 0 means death - no miraculous saves
+   - Extreme risk choices can lead to instant death if they fail
+   - Players must think carefully about their actions
+
+3. **NO FAVORITISM**: Treat all characters equally
+   - Don't give special treatment to any character
+   - Don't make outcomes easier for characters you "like"
+   - Apply the same rules and consequences to everyone
+   - Let the dice (and player choices) determine outcomes
+
+4. **UNPREDICTABILITY**: Keep outcomes interesting and non-obvious
+   - Don't make the "right" choice obvious
+   - Sometimes the safe choice fails, risky choices succeed
+   - Add unexpected twists and complications
+   - Environmental factors, luck, and timing matter
+   - Even "perfect" plans can have complications
+
+5. **SMART PLAY MATTERS**: Reward intelligent decision-making
+   - Players who use their abilities cleverly should have advantages
+   - Exploiting enemy weaknesses should be highly effective
+   - Defensive/cautious play when low on HP should help survival
+   - Creative solutions should be rewarded
+   - Poor tactical choices should have consequences
+
+6. **MAKE IT FUN**: Above all, keep the game engaging
+   - Create dramatic moments and close calls
+   - Give players meaningful choices with real stakes
+   - Balance tension with moments of triumph
+   - Make combat feel dynamic and impactful
+   - Keep the pacing exciting
+
+7. **DIFFICULTY PROGRESSION**: 
+   - Early game (turns 1-10): Easier encounters, learning phase
+   - Mid game (turns 11-30): Moderate challenge, strategic depth
+   - Late game (turns 31+): Deadly encounters, high stakes
+   - Scale enemy power and encounter difficulty with player levels
+   - Give frequent stat updates and level-ups to show progression
+
+8. **REREAD POWER SHEETS**: Before generating each turn:
+   - Check current HP levels for all characters
+   - Review active abilities and their power levels
+   - Consider character weaknesses in the situation
+   - Factor in any active status effects
+   - Ensure stat updates are accurate and consistent
 
 Return your response in the following JSON format:
 {
