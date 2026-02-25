@@ -121,6 +121,9 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
   // Simplify effects on mobile/low-end devices
   const simplifyEffects = isMobile || isLowEndDevice;
 
+  // Ensure events is an array
+  const safeEvents = Array.isArray(events) ? events : [];
+
   // Auto-scroll to bottom when new events are added
   useEffect(() => {
     if (feedRef.current && feedRef.current.scrollTo) {
@@ -129,7 +132,7 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
         behavior: prefersReducedMotion ? 'auto' : 'smooth'
       });
     }
-  }, [events.length, prefersReducedMotion]);
+  }, [safeEvents.length, prefersReducedMotion]);
 
   return (
     <div 
@@ -141,7 +144,7 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
         scrollbarColor: 'rgba(6, 182, 212, 0.3) rgba(17, 24, 39, 0.6)'
       }}
     >
-      {events.length === 0 ? (
+      {safeEvents.length === 0 ? (
         <motion.div 
           className={`${GLASS_PANEL_CLASSES.glowCyan} p-8 text-center`}
           variants={prefersReducedMotion ? undefined : fadeIn}
@@ -152,7 +155,7 @@ export function BattleFeed({ events, onEventRead }: BattleFeedProps) {
         </motion.div>
       ) : (
         <AnimatePresence mode="popLayout">
-          {events.map((event, index) => (
+          {safeEvents.map((event, index) => (
             <motion.div
               key={event.id}
               variants={prefersReducedMotion ? undefined : slideUp}
@@ -273,9 +276,11 @@ function EventContent({
       )}
 
       {/* Timestamp */}
-      <div className="text-xs text-gray-600 mt-3">
-        {event.timestamp.toLocaleTimeString()}
-      </div>
+      {event.timestamp && (
+        <div className="text-xs text-gray-600 mt-3">
+          {new Date(event.timestamp).toLocaleTimeString()}
+        </div>
+      )}
     </div>
   );
 }

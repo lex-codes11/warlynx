@@ -97,19 +97,28 @@ export function PowerHUD({ character, visible }: PowerHUDProps) {
     return null;
   }
 
+  // Ensure character has required properties with defaults
+  const safeCharacter = {
+    ...character,
+    hp: character.hp ?? 100,
+    maxHp: character.maxHp ?? 100,
+    level: character.level ?? 1,
+    status: character.status ?? [],
+  };
+
   // Calculate HP percentage
-  const hpPercentage = Math.max(0, Math.min(100, (character.hp / character.maxHp) * 100));
-  const hpColor = getHPColor(character.hp, character.maxHp);
+  const hpPercentage = Math.max(0, Math.min(100, (safeCharacter.hp / safeCharacter.maxHp) * 100));
+  const hpColor = getHPColor(safeCharacter.hp, safeCharacter.maxHp);
 
   // Separate buffs and debuffs
-  const buffs = character.status?.filter(s => s.type === 'buff') || [];
-  const debuffs = character.status?.filter(s => s.type === 'debuff') || [];
+  const buffs = safeCharacter.status?.filter(s => s.type === 'buff') || [];
+  const debuffs = safeCharacter.status?.filter(s => s.type === 'debuff') || [];
 
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          className="fixed bottom-0 left-0 right-0 bg-gray-900/80 backdrop-blur-xl border-t border-cyan-500/30"
+          className="fixed bottom-0 left-0 right-0 bg-gray-950/90 backdrop-blur-xl border-t border-cyan-500/30"
           style={{ zIndex: Z_INDEX.hud }}
           variants={prefersReducedMotion ? undefined : slideInBottom}
           initial={prefersReducedMotion ? undefined : "initial"}
@@ -121,15 +130,15 @@ export function PowerHUD({ character, visible }: PowerHUDProps) {
               {/* Character Name */}
               <div className="flex-shrink-0">
                 <h3 className="text-xl font-bold text-cyan-400 uppercase tracking-wide">
-                  {character.name}
+                  {safeCharacter.name}
                 </h3>
               </div>
 
               {/* HP Bar - Requirement 5.2 */}
               <div className="flex-1 w-full md:w-auto">
                 <HPBar
-                  current={character.hp}
-                  max={character.maxHp}
+                  current={safeCharacter.hp}
+                  max={safeCharacter.maxHp}
                   percentage={hpPercentage}
                   color={hpColor}
                   reducedMotion={prefersReducedMotion}
@@ -140,14 +149,14 @@ export function PowerHUD({ character, visible }: PowerHUDProps) {
               <div className="flex gap-4 flex-shrink-0">
                 <StatDisplay 
                   label="LVL" 
-                  value={character.level.toString()} 
-                  ariaLabel={`Level ${character.level}`}
+                  value={safeCharacter.level.toString()} 
+                  ariaLabel={`Level ${safeCharacter.level}`}
                 />
                 <StatDisplay 
                   label="HP" 
-                  value={`${character.hp}/${character.maxHp}`}
+                  value={`${safeCharacter.hp}/${safeCharacter.maxHp}`}
                   color={hpColor}
-                  ariaLabel={`Health: ${character.hp} out of ${character.maxHp}`}
+                  ariaLabel={`Health: ${safeCharacter.hp} out of ${safeCharacter.maxHp}`}
                 />
               </div>
 
@@ -252,7 +261,7 @@ interface StatDisplayProps {
 function StatDisplay({ label, value, color, ariaLabel }: StatDisplayProps) {
   return (
     <div 
-      className="bg-gray-900/90 backdrop-blur-md rounded-lg px-4 py-2 border border-gray-700/50"
+      className="bg-gray-950/90 backdrop-blur-md rounded-lg px-4 py-2 border border-gray-800/50"
       role="status"
       aria-label={ariaLabel || `${label}: ${value}`}
     >

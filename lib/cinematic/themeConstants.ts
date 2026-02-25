@@ -124,20 +124,20 @@ export const CINEMATIC_SPACING = {
  */
 export const GLASS_PANEL_CLASSES = {
   /** Base glass panel without glow */
-  base: 'bg-gray-900/60 backdrop-blur-lg border border-gray-700/50 rounded-xl',
+  base: 'bg-gray-950/80 backdrop-blur-lg border border-gray-800/50 rounded-xl',
   /** Dark variant with more opacity */
-  dark: 'bg-gray-900/80 backdrop-blur-lg border border-gray-700/50 rounded-xl',
+  dark: 'bg-gray-950/90 backdrop-blur-lg border border-gray-800/50 rounded-xl',
   /** Light variant with less opacity */
-  light: 'bg-gray-900/40 backdrop-blur-md border border-gray-700/30 rounded-xl',
+  light: 'bg-gray-950/70 backdrop-blur-md border border-gray-800/30 rounded-xl',
   
   /** Glass panel with cyan glow */
-  glowCyan: 'bg-gray-900/60 backdrop-blur-lg border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.3)] rounded-xl',
+  glowCyan: 'bg-gray-950/80 backdrop-blur-lg border border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.2)] rounded-xl',
   /** Glass panel with purple glow */
-  glowPurple: 'bg-gray-900/60 backdrop-blur-lg border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.6)] rounded-xl',
+  glowPurple: 'bg-gray-950/80 backdrop-blur-lg border border-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.3)] rounded-xl',
   /** Glass panel with orange glow */
-  glowOrange: 'bg-gray-900/60 backdrop-blur-lg border border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.4)] rounded-xl',
+  glowOrange: 'bg-gray-950/80 backdrop-blur-lg border border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.2)] rounded-xl',
   /** Glass panel with magenta glow */
-  glowMagenta: 'bg-gray-900/60 backdrop-blur-lg border border-magenta-500/30 shadow-[0_0_20px_rgba(236,72,153,0.4)] rounded-xl',
+  glowMagenta: 'bg-gray-950/80 backdrop-blur-lg border border-magenta-500/30 shadow-[0_0_20px_rgba(236,72,153,0.2)] rounded-xl',
 } as const;
 
 /**
